@@ -58,10 +58,22 @@ Built with [Tauri v2](https://tauri.app) (Rust) and [Pixi.js v8](https://pixijs.
 
 ### Option A — Pre-built Release (Recommended)
 
-1. Go to the [Releases](../../releases) page
-2. Download the latest `cadze_x.x.x_x64-setup.exe` installer
-3. Run the installer — it includes all required libraries (`dwg2dxf.exe`, DLLs)
-4. Launch **Cadze** from the Start Menu or desktop shortcut
+**Step 1 — Download**
+Go to the [Releases](../../releases) page and download **cadze-vX.X.X-windows-x64.zip**.
+
+**Step 2 — Extract**
+Right-click the ZIP → **Extract All** → choose a permanent folder such as `C:\Cadze`.
+> Do not run `cadze.exe` directly from inside the ZIP or from a temporary location.
+
+**Step 3 — Create a shortcut (optional)**
+Right-click `cadze.exe` → **Show more options** → **Create shortcut** → move the shortcut to your Desktop.
+
+**Step 4 — Set as default app for DWG/DXF (optional)**
+Right-click any `.dwg` or `.dxf` file → **Open with** → **Choose another app** → **More apps** → **Look for another app on this PC** → browse to `cadze.exe` → check **Always use this app** → **OK**.
+
+> Cadze automatically writes the file association to the Windows registry on first launch, so `.dwg` and `.dxf` files will already appear in the "Open with" list after running the program once.
+
+**Requirements:** Windows 10/11 (64-bit). WebView2 Runtime is required — pre-installed on Windows 11. On Windows 10, download it from [microsoft.com/edge/webview2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) if missing.
 
 ### Option B — Build from Source
 
