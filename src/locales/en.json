@@ -1,0 +1,42 @@
+{
+  "app": { "version": "v0.1-beta" },
+  "titlebar": { "settings": "Settings", "minimize": "Minimize", "close": "Close" },
+  "dropzone": {
+    "title": "Drop CAD File Here",
+    "formats": "DWG · DXF · STL",
+    "or": "or",
+    "browse": "Browse File  Ctrl+O",
+    "recent": "Recent Files"
+  },
+  "footer": { "local": "locally processed", "opensource": "open-source" },
+  "infobar": {
+    "dwg_partial": "DWG {{version}} detected — open-source engine used, some advanced elements may be missing.",
+    "report": "Report Issue",
+    "dwg_unsupported": "DWG {{version}} — this version has limited support. Convert to DXF for best results."
+  },
+  "toolbar": { "zoom": "Zoom / Pan", "measure": "Measure", "edit": "Edit", "home": "Fit View" },
+  "layers": "Layers",
+  "properties": "Properties",
+  "no_selection": "No object selected",
+  "props": { "type": "Type", "layer": "Layer", "length": "Length", "radius": "Radius", "color": "Color", "angle": "Angle", "area": "Area", "perimeter": "Perimeter", "selected": "Selected", "delete_hint": "Del — delete selected" },
+  "statusbar": { "coords": "X: {{x}}  Y: {{y}}", "zoom": "1:{{z}}" },
+  "cmd": {
+    "hint": "Type a command...",
+    "zoom_all": "ZOOM: Fit all",
+    "unknown": "Unknown command: {{cmd}}"
+  },
+  "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
+  "pro": "Cadze Pro — Coming Soon",
+  "settings": {
+    "title": "Settings",
+    "language": "Language"
+  },
+  "langs": {
+    "en": "English",
+    "tr": "Türkçe",
+    "de": "Deutsch",
+    "zh": "中文",
+    "ja": "日本語"
+  },
+  "loading": { "parsing": "Parsing file...", "rendering": "Rendering {{n}} entities..." }
+}

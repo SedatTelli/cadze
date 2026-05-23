@@ -1,0 +1,29 @@
+{
+  "app": { "version": "v0.1-beta" },
+  "titlebar": { "settings": "Einstellungen", "minimize": "Minimieren", "close": "Schließen" },
+  "dropzone": {
+    "title": "CAD-Datei hier ablegen",
+    "formats": "DWG · DXF · STL",
+    "or": "oder",
+    "browse": "Datei auswählen  Ctrl+O",
+    "recent": "Zuletzt geöffnet"
+  },
+  "footer": { "local": "lokal verarbeitet", "opensource": "open-source" },
+  "infobar": {
+    "dwg_partial": "DWG {{version}} erkannt — Open-Source-Engine verwendet, einige Elemente fehlen möglicherweise.",
+    "report": "Problem melden",
+    "dwg_unsupported": "DWG {{version}} — eingeschränkte Unterstützung. Für beste Ergebnisse in DXF konvertieren."
+  },
+  "toolbar": { "zoom": "Zoom / Verschieben", "measure": "Messen", "edit": "Bearbeiten", "home": "Alles anzeigen" },
+  "layers": "Ebenen",
+  "properties": "Eigenschaften",
+  "no_selection": "Kein Objekt ausgewählt",
+  "props": { "type": "Typ", "layer": "Ebene", "length": "Länge", "radius": "Radius", "color": "Farbe", "angle": "Winkel", "area": "Fläche", "perimeter": "Umfang", "selected": "Ausgewählt", "delete_hint": "Del — ausgewählte löschen" },
+  "statusbar": { "coords": "X: {{x}}  Y: {{y}}", "zoom": "1:{{z}}" },
+  "cmd": { "hint": "Befehl eingeben...", "zoom_all": "ZOOM: Alles", "unknown": "Unbekannter Befehl: {{cmd}}" },
+  "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
+  "pro": "Cadze Pro — Demnächst",
+  "settings": { "title": "Einstellungen", "language": "Sprache" },
+  "langs": { "en": "English", "tr": "Türkçe", "de": "Deutsch", "zh": "中文", "ja": "日本語" },
+  "loading": { "parsing": "Datei wird geparst...", "rendering": "{{n}} Objekte werden gerendert..." }
+}

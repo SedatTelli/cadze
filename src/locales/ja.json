@@ -1,0 +1,29 @@
+{
+  "app": { "version": "v0.1-beta" },
+  "titlebar": { "settings": "設定", "minimize": "最小化", "close": "閉じる" },
+  "dropzone": {
+    "title": "CADファイルをここにドロップ",
+    "formats": "DWG · DXF · STL",
+    "or": "または",
+    "browse": "ファイルを選択  Ctrl+O",
+    "recent": "最近のファイル"
+  },
+  "footer": { "local": "ローカル処理", "opensource": "オープンソース" },
+  "infobar": {
+    "dwg_partial": "DWG {{version}} を検出 — オープンソースエンジン使用中、一部の要素が欠ける場合があります。",
+    "report": "問題を報告",
+    "dwg_unsupported": "DWG {{version}} — サポートが限定的です。DXFに変換することをお勧めします。"
+  },
+  "toolbar": { "zoom": "ズーム / 移動", "measure": "測定", "edit": "編集", "home": "全体表示" },
+  "layers": "レイヤー",
+  "properties": "プロパティ",
+  "no_selection": "オブジェクト未選択",
+  "props": { "type": "種類", "layer": "レイヤー", "length": "長さ", "radius": "半径", "color": "色", "angle": "角度", "area": "面積", "perimeter": "周長", "selected": "選択済み", "delete_hint": "Del — 選択を削除" },
+  "statusbar": { "coords": "X: {{x}}  Y: {{y}}", "zoom": "1:{{z}}" },
+  "cmd": { "hint": "コマンドを入力...", "zoom_all": "ZOOM: 全体", "unknown": "不明なコマンド: {{cmd}}" },
+  "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
+  "pro": "Cadze Pro — 近日公開",
+  "settings": { "title": "設定", "language": "言語" },
+  "langs": { "en": "English", "tr": "Türkçe", "de": "Deutsch", "zh": "中文", "ja": "日本語" },
+  "loading": { "parsing": "ファイルを解析中...", "rendering": "{{n}} 個のオブジェクトをレンダリング中..." }
+}

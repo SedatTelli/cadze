@@ -1,0 +1,42 @@
+{
+  "app": { "version": "v0.1-beta" },
+  "titlebar": { "settings": "Ayarlar", "minimize": "Küçült", "close": "Kapat" },
+  "dropzone": {
+    "title": "CAD Dosyasını Buraya Bırak",
+    "formats": "DWG · DXF · STL",
+    "or": "ya da",
+    "browse": "Dosya Seç  Ctrl+O",
+    "recent": "Son Açılanlar"
+  },
+  "footer": { "local": "yerel işlem", "opensource": "açık kaynak" },
+  "infobar": {
+    "dwg_partial": "DWG {{version}} algılandı — açık kaynaklı motor kullanılıyor, bazı gelişmiş elementler eksik görünebilir.",
+    "report": "Sorun Bildir",
+    "dwg_unsupported": "DWG {{version}} — bu sürüm sınırlı desteklenmektedir. En iyi sonuç için DXF'e dönüştürün."
+  },
+  "toolbar": { "zoom": "Yakınlaştır / Kaydır", "measure": "Ölçüm", "edit": "Düzenle", "home": "Tümünü Göster" },
+  "layers": "Katmanlar",
+  "properties": "Özellikler",
+  "no_selection": "Nesne seçilmedi",
+  "props": { "type": "Tür", "layer": "Katman", "length": "Uzunluk", "radius": "Yarıçap", "color": "Renk", "angle": "Açı", "area": "Alan", "perimeter": "Çevre", "selected": "Seçili", "delete_hint": "Del — seçileni sil" },
+  "statusbar": { "coords": "X: {{x}}  Y: {{y}}", "zoom": "1:{{z}}" },
+  "cmd": {
+    "hint": "Komut yazın...",
+    "zoom_all": "ZOOM: Tümünü Göster",
+    "unknown": "Bilinmeyen komut: {{cmd}}"
+  },
+  "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
+  "pro": "Cadze Pro — Çok Yakında",
+  "settings": {
+    "title": "Ayarlar",
+    "language": "Dil"
+  },
+  "langs": {
+    "en": "English",
+    "tr": "Türkçe",
+    "de": "Deutsch",
+    "zh": "中文",
+    "ja": "日本語"
+  },
+  "loading": { "parsing": "Dosya okunuyor...", "rendering": "{{n}} nesne çiziliyor..." }
+}

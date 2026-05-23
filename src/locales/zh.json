@@ -1,0 +1,29 @@
+{
+  "app": { "version": "v0.1-beta" },
+  "titlebar": { "settings": "设置", "minimize": "最小化", "close": "关闭" },
+  "dropzone": {
+    "title": "将CAD文件拖放到此处",
+    "formats": "DWG · DXF · STL",
+    "or": "或",
+    "browse": "选择文件  Ctrl+O",
+    "recent": "最近文件"
+  },
+  "footer": { "local": "本地处理", "opensource": "开源" },
+  "infobar": {
+    "dwg_partial": "检测到 DWG {{version}} — 使用开源引擎，部分高级元素可能缺失。",
+    "report": "报告问题",
+    "dwg_unsupported": "DWG {{version}} — 支持有限。建议转换为DXF以获得最佳效果。"
+  },
+  "toolbar": { "zoom": "缩放 / 平移", "measure": "测量", "edit": "编辑", "home": "适合视图" },
+  "layers": "图层",
+  "properties": "属性",
+  "no_selection": "未选择对象",
+  "props": { "type": "类型", "layer": "图层", "length": "长度", "radius": "半径", "color": "颜色", "angle": "角度", "area": "面积", "perimeter": "周长", "selected": "已选择", "delete_hint": "Del — 删除所选" },
+  "statusbar": { "coords": "X: {{x}}  Y: {{y}}", "zoom": "1:{{z}}" },
+  "cmd": { "hint": "输入命令...", "zoom_all": "ZOOM: 全部显示", "unknown": "未知命令: {{cmd}}" },
+  "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
+  "pro": "Cadze Pro — 即将推出",
+  "settings": { "title": "设置", "language": "语言" },
+  "langs": { "en": "English", "tr": "Türkçe", "de": "Deutsch", "zh": "中文", "ja": "日本語" },
+  "loading": { "parsing": "正在解析文件...", "rendering": "正在渲染 {{n}} 个对象..." }
+}

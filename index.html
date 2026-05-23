@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadze</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+  <body>
+    <div id="app">
+
+      <!-- ═══ TITLEBAR ═══════════════════════════════════════════ -->
+      <div class="titlebar">
+        <div class="titlebar-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12,2 22,8 22,16 12,22 2,16 2,8"/>
+            <line x1="12" y1="2" x2="12" y2="22"/>
+            <line x1="2" y1="8" x2="22" y2="8"/>
+            <line x1="2" y1="16" x2="22" y2="16"/>
+          </svg>
+          CADZE
+        </div>
+        <div class="titlebar-filename" id="titlebar-filename"></div>
+        <button class="titlebar-btn settings-btn" id="btn-settings" title="Settings">⚙</button>
+      </div>
+
+      <!-- ═══ MENUBAR ══════════════════════════════════════════════ -->
+      <div class="menubar" id="menubar">
+        <div class="menu-item" data-menu="file">
+          <span class="menu-label">File</span>
+          <div class="menu-dropdown">
+            <div class="menu-cmd" data-cmd="open">Open… <kbd>Ctrl+O</kbd></div>
+            <div class="menu-sep"></div>
+            <div class="menu-cmd" data-cmd="export-png">Export PNG</div>
+            <div class="menu-cmd" data-cmd="export-pdf">Print / Export PDF <kbd>Ctrl+P</kbd></div>
+            <div class="menu-cmd" data-cmd="export-dxf">Export DXF</div>
+            <div class="menu-sep"></div>
+            <div class="menu-cmd" data-cmd="close-file">Close File</div>
+          </div>
+        </div>
+        <div class="menu-item" data-menu="view">
+          <span class="menu-label">View</span>
+          <div class="menu-dropdown">
+            <div class="menu-cmd" data-cmd="zoom-in">Zoom In <kbd>+</kbd></div>
+            <div class="menu-cmd" data-cmd="zoom-out">Zoom Out <kbd>−</kbd></div>
+            <div class="menu-cmd" data-cmd="fit-view">Fit View <kbd>Home</kbd></div>
+            <div class="menu-sep"></div>
+            <div class="menu-cmd" data-cmd="toggle-bg">Light Background <kbd>B</kbd></div>
+            <div class="menu-sep"></div>
+            <div class="menu-cmd" data-cmd="fullscreen">Fullscreen <kbd>F11</kbd></div>
+          </div>
+        </div>
+        <div class="menu-item" data-menu="tools">
+          <span class="menu-label">Tools</span>
+          <div class="menu-dropdown">
+            <div class="menu-cmd" data-cmd="tool-pan">Pan / Select <kbd>V</kbd></div>
+            <div class="menu-cmd" data-cmd="tool-zoom-window">Zoom Window <kbd>Z</kbd></div>
+            <div class="menu-sep"></div>
+            <div class="menu-cmd" data-cmd="tool-measure">Measure Distance <kbd>M</kbd></div>
+            <div class="menu-cmd" data-cmd="tool-angle">Measure Angle <kbd>A</kbd></div>
+            <div class="menu-cmd" data-cmd="tool-area">Measure Area <kbd>R</kbd></div>
+            <div class="menu-cmd" data-cmd="tool-note">Add Note <kbd>N</kbd></div>
+            <div class="menu-sep"></div>
+            <div class="menu-cmd" data-cmd="toggle-osnap">Toggle OSNAP <kbd>F3</kbd></div>
+            <div class="menu-sep"></div>
+            <div class="menu-cmd" data-cmd="layers-all">Show All Layers</div>
+            <div class="menu-cmd" data-cmd="layers-none">Hide All Layers</div>
+            <div class="menu-sep"></div>
+            <div class="menu-cmd" data-cmd="undo">Undo <kbd>Ctrl+Z</kbd></div>
+            <div class="menu-cmd" data-cmd="redo">Redo <kbd>Ctrl+Y</kbd></div>
+            <div class="menu-sep"></div>
+            <div class="menu-cmd" data-cmd="clear-measure">Clear Measurements <kbd>Del</kbd></div>
+            <div class="menu-cmd" data-cmd="clear-notes">Clear All Notes</div>
+          </div>
+        </div>
+        <div class="menu-item" data-menu="help">
+          <span class="menu-label">Help</span>
+          <div class="menu-dropdown">
+            <div class="menu-cmd" data-cmd="user-manual">User Manual <kbd>F1</kbd></div>
+            <div class="menu-sep"></div>
+            <div class="menu-cmd" data-cmd="report">Report Issue</div>
+            <div class="menu-cmd" data-cmd="about">About Cadze</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ INFOBAR (DWG warnings) ════════════════════════════ -->
+      <div class="infobar" id="infobar">
+        <span class="infobar-icon">⚠</span>
+        <span class="infobar-text" id="infobar-text"></span>
+        <button class="infobar-btn" id="infobar-report">Report</button>
+        <button class="infobar-close" id="infobar-close">✕</button>
+      </div>
+
+      <!-- ═══ DROPZONE SCREEN ════════════════════════════════════ -->
+      <div id="dropzone-screen">
+        <div class="dropzone-area" id="dropzone-area">
+          <svg class="dropzone-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="8" y="4" width="36" height="48" rx="4"/>
+            <polyline points="36,4 36,16 48,16"/>
+            <path d="M48 36 L48 60 M38 50 L48 60 L58 50" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="14" y1="24" x2="34" y2="24"/>
+            <line x1="14" y1="32" x2="28" y2="32"/>
+          </svg>
+          <div class="dropzone-title" id="dropzone-title">Drop CAD File Here</div>
+          <div class="dropzone-formats" id="dropzone-formats">DWG · DXF · STL</div>
+          <div class="dropzone-or" id="dropzone-or">or</div>
+          <button class="dropzone-browse" id="dropzone-browse">Browse File &nbsp; Ctrl+O</button>
+          <input type="file" id="file-input" accept=".dxf,.dwg,.stl" style="display:none" />
+        </div>
+        <div class="recent-files" id="recent-section" style="display:none">
+          <div class="recent-title" id="recent-title">Recent Files</div>
+          <div class="recent-list" id="recent-list"></div>
+        </div>
+        <div class="footer-bar">
+          <div class="footer-tag"><span class="dot"></span><span id="footer-local">locally processed</span></div>
+          <div class="footer-tag">⬡ <span id="footer-opensource">open-source</span></div>
+          <div class="footer-version" id="footer-version">v0.1-beta</div>
+        </div>
+      </div>
+
+      <!-- ═══ WORKSPACE SCREEN ═══════════════════════════════════ -->
+      <div id="workspace-screen">
+        <!-- Tab bar -->
+        <div id="tab-bar">
+          <div id="tab-list"></div>
+          <button id="tab-new" title="Open new file  Ctrl+O">＋</button>
+        </div>
+        <div class="workspace-body">
+
+          <!-- Left toolbar -->
+          <div class="toolbar">
+            <!-- Pan -->
+            <button class="tool-btn active" id="tool-pan" title="Pan (V)" data-tip="Pan  V">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="9" y1="2" x2="9" y2="16"/><line x1="2" y1="9" x2="16" y2="9"/>
+                <polyline points="6,5 9,2 12,5"/><polyline points="13,6 16,9 13,12"/>
+                <polyline points="12,13 9,16 6,13"/><polyline points="5,12 2,9 5,6"/>
+              </svg>
+            </button>
+            <!-- Zoom Window -->
+            <button class="tool-btn" id="tool-zoom-window" title="Zoom Window (Z)" data-tip="Zoom Window  Z">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <rect x="2" y="2" width="10" height="8" rx="1"/>
+                <circle cx="13" cy="13" r="3.5"/>
+                <line x1="15.5" y1="15.5" x2="17" y2="17"/>
+              </svg>
+            </button>
+            <div class="tool-sep"></div>
+            <!-- Measure Distance -->
+            <button class="tool-btn" id="tool-measure" title="Measure Distance (M)" data-tip="Measure  M">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <line x1="2" y1="16" x2="16" y2="2"/>
+                <circle cx="3" cy="15" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="15" cy="3" r="1.5" fill="currentColor" stroke="none"/>
+                <line x1="5.5" y1="12.5" x2="7" y2="11"/>
+                <line x1="9" y1="9" x2="10.5" y2="7.5"/>
+                <line x1="12.5" y1="5.5" x2="14" y2="4"/>
+              </svg>
+            </button>
+            <!-- Angle Measure -->
+            <button class="tool-btn" id="tool-angle" title="Measure Angle (A)" data-tip="Angle  A">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <line x1="3" y1="15" x2="15" y2="15"/>
+                <line x1="3" y1="15" x2="12" y2="4"/>
+                <path d="M 8 15 A 5 5 0 0 1 11.2 10.5" stroke-dasharray="2 1"/>
+              </svg>
+            </button>
+            <!-- Area Measure -->
+            <button class="tool-btn" id="tool-area" title="Measure Area (R) — double-click to close" data-tip="Area  R">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="9,2 16,7 13,15 5,15 2,7"/>
+              </svg>
+            </button>
+            <!-- Note -->
+            <button class="tool-btn" id="tool-note" title="Add Note (N)" data-tip="Add Note  N">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="14" height="12" rx="2"/>
+                <line x1="5" y1="6" x2="13" y2="6"/>
+                <line x1="5" y1="9" x2="11" y2="9"/>
+                <path d="M11 14 L14 14 L16 16 L16 14" fill="none"/>
+              </svg>
+            </button>
+            <div class="tool-sep"></div>
+            <!-- Zoom In -->
+            <button class="tool-btn zoom-btn" id="tool-zoom-in" title="Zoom In (+)" data-cmd="zoom-in">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <circle cx="8" cy="8" r="5.5"/>
+                <line x1="13" y1="13" x2="16.5" y2="16.5"/>
+                <line x1="8" y1="5.5" x2="8" y2="10.5"/>
+                <line x1="5.5" y1="8" x2="10.5" y2="8"/>
+              </svg>
+            </button>
+            <!-- Zoom Out -->
+            <button class="tool-btn zoom-btn" id="tool-zoom-out" title="Zoom Out (-)" data-cmd="zoom-out">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <circle cx="8" cy="8" r="5.5"/>
+                <line x1="13" y1="13" x2="16.5" y2="16.5"/>
+                <line x1="5.5" y1="8" x2="10.5" y2="8"/>
+              </svg>
+            </button>
+            <div class="tool-sep"></div>
+            <!-- Trim -->
+            <button class="tool-btn" id="tool-trim" title="Trim (TR)" data-tip="Trim  TR">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <line x1="2" y1="7" x2="7.5" y2="7"/>
+                <line x1="10.5" y1="7" x2="16" y2="7"/>
+                <line x1="9" y1="3" x2="9" y2="15"/>
+                <line x1="7" y1="5" x2="11" y2="9"/>
+                <line x1="7" y1="9" x2="11" y2="5"/>
+              </svg>
+            </button>
+            <!-- Extend -->
+            <button class="tool-btn" id="tool-extend" title="Extend (EX)" data-tip="Extend  EX">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="2" y1="9" x2="12" y2="9"/>
+                <polyline points="9,6 13,9 9,12"/>
+                <line x1="15" y1="4" x2="15" y2="14"/>
+              </svg>
+            </button>
+            <!-- Offset -->
+            <button class="tool-btn" id="tool-offset" title="Offset (O)" data-tip="Offset  O">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <line x1="2" y1="6" x2="16" y2="6"/>
+                <line x1="2" y1="12" x2="16" y2="12"/>
+                <line x1="9" y1="7" x2="9" y2="11" stroke-dasharray="2,1.5"/>
+              </svg>
+            </button>
+            <!-- Fit View -->
+            <button class="tool-btn" id="tool-fit" title="Fit View (Home)" data-tip="Fit View  Home">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2,6 2,2 6,2"/><polyline points="12,2 16,2 16,6"/>
+                <polyline points="16,12 16,16 12,16"/><polyline points="6,16 2,16 2,12"/>
+                <rect x="5" y="5" width="8" height="8"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Canvas area -->
+          <div class="canvas-wrap" id="canvas-wrap">
+            <div id="note-layer"></div>
+            <div id="note-input-wrap">
+              <textarea id="note-input" rows="3" placeholder="Notu yaz… (Enter kaydet, Esc iptal)"></textarea>
+            </div>
+            <div class="loading-overlay" id="loading-overlay">
+              <div class="loading-spinner"></div>
+              <div class="loading-text" id="loading-text">Parsing file...</div>
+              <div class="loading-progress" id="loading-progress"></div>
+            </div>
+          </div>
+
+          <!-- Right panel -->
+          <div class="right-panel">
+            <div class="panel-section layers-section">
+              <div class="panel-header">
+                <span>▤</span>
+                <span id="panel-layers-title">Layers</span>
+                <div class="layer-header-actions">
+                  <button class="layer-action-btn" id="layers-all-btn" title="Show All">All</button>
+                  <button class="layer-action-btn" id="layers-none-btn" title="Hide All">None</button>
+                </div>
+              </div>
+              <div class="layer-list" id="layer-list"></div>
+            </div>
+            <div class="panel-section">
+              <div class="panel-header">
+                <span>◈</span>
+                <span id="panel-props-title">Properties</span>
+              </div>
+              <div class="props-list" id="props-list">
+                <div class="no-selection" id="no-selection-msg">No object selected</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statusbar -->
+        <div class="statusbar">
+          <div class="cmd-line">
+            <span class="cmd-prompt">&gt;</span>
+            <input class="cmd-input" id="cmd-input" type="text" placeholder="Type a command…" autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="status-divider"></div>
+          <div class="status-measure" id="status-measure" style="display:none">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:12px;height:12px;color:#00ff88">
+              <line x1="1" y1="13" x2="13" y2="1"/>
+              <line x1="3" y1="11" x2="4.5" y2="9.5"/>
+              <line x1="6.5" y1="7.5" x2="8" y2="6"/>
+              <line x1="10" y1="4" x2="11.5" y2="2.5"/>
+            </svg>
+            <span id="status-measure-val">—</span>
+            <button class="measure-clear" id="status-measure-clear" title="Clear measurements">✕</button>
+          </div>
+          <div class="status-divider"></div>
+          <div class="status-coord" id="status-coord">X: <span>0.00</span>&nbsp;&nbsp;Y: <span>0.00</span></div>
+          <div class="status-zoom" id="status-zoom">1:<span>1</span></div>
+          <div class="status-divider"></div>
+          <button class="osnap-btn active" id="osnap-indicator" title="OSNAP ON (F3 to toggle)">OSNAP</button>
+          <div class="status-divider"></div>
+          <select class="unit-select" id="unit-select" title="Drawing Units">
+            <option value="unit">unit</option>
+            <option value="mm">mm</option>
+            <option value="cm">cm</option>
+            <option value="m">m</option>
+            <option value="inch">inch</option>
+            <option value="ft">ft</option>
+          </select>
+          <div class="status-divider"></div>
+          <div class="status-fps" id="status-fps" title="Frames per second">— fps</div>
+        </div>
+
+        <!-- Export bar -->
+        <div class="exportbar">
+          <button class="export-btn" id="export-pdf">📄 PDF</button>
+          <button class="export-btn" id="export-png">🖼 PNG</button>
+          <button class="export-btn" id="export-dxf">💾 DXF</button>
+          <div class="pro-badge" id="pro-badge">
+            <span class="pro-dot"></span>
+            <span id="pro-badge-text">Cadze Pro — Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══ CONTEXT MENU ══════════════════════════════════════════ -->
+    <div id="context-menu">
+      <div class="ctx-cmd" data-cmd="fit-view">Fit View <kbd>Home</kbd></div>
+      <div class="ctx-cmd" data-cmd="zoom-in">Zoom In <kbd>+</kbd></div>
+      <div class="ctx-cmd" data-cmd="zoom-out">Zoom Out <kbd>−</kbd></div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-cmd" data-cmd="tool-pan">Pan <kbd>V</kbd></div>
+      <div class="ctx-cmd" data-cmd="tool-zoom-window">Zoom Window <kbd>Z</kbd></div>
+      <div class="ctx-cmd" data-cmd="tool-measure">Measure Distance <kbd>M</kbd></div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-cmd" data-cmd="clear-measure">Clear Measurements <kbd>Del</kbd></div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-cmd" data-cmd="export-png">Export PNG</div>
+      <div class="ctx-cmd" data-cmd="export-pdf">Print / PDF <kbd>Ctrl+P</kbd></div>
+    </div>
+
+    <!-- ═══ SETTINGS MODAL ════════════════════════════════════════ -->
+    <div class="modal-overlay" id="settings-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <span>⚙</span>
+          <span class="modal-title" id="modal-title">Settings</span>
+          <button class="modal-close" id="modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="setting-row">
+            <div class="setting-label" id="lang-label">Language</div>
+            <div class="lang-grid" id="lang-grid"></div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">Keyboard Shortcuts</div>
+            <div class="shortcuts-grid">
+              <div class="sc-row"><kbd>V</kbd> Pan / Select</div>
+              <div class="sc-row"><kbd>Z</kbd> Zoom Window</div>
+              <div class="sc-row"><kbd>M</kbd> Measure Distance</div>
+              <div class="sc-row"><kbd>Home</kbd> Fit View</div>
+              <div class="sc-row"><kbd>+</kbd> / <kbd>−</kbd> Zoom In/Out</div>
+              <div class="sc-row"><kbd>B</kbd> Toggle Background</div>
+              <div class="sc-row"><kbd>F11</kbd> Fullscreen</div>
+              <div class="sc-row"><kbd>Del</kbd> Clear Measurements</div>
+              <div class="sc-row"><kbd>Ctrl+O</kbd> Open File</div>
+              <div class="sc-row"><kbd>Ctrl+P</kbd> Print / PDF</div>
+              <div class="sc-row"><kbd>Esc</kbd> Cancel Tool Action</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ HELP MODAL ══════════════════════════════════════════════ -->
+    <div class="help-overlay" id="help-modal">
+      <div class="help-window">
+        <div class="help-topbar">
+          <span class="help-logo">⬡ CADZE</span>
+          <span class="help-title">Kullanım Kılavuzu &nbsp;/&nbsp; User Manual</span>
+          <button class="help-print-btn" onclick="window.print()" title="PDF olarak kaydet">🖨 PDF</button>
+          <button class="help-close-btn" id="help-close">✕</button>
+        </div>
+        <div class="help-body" id="help-body"></div>
+      </div>
+    </div>
+
+  </body>
+</html>

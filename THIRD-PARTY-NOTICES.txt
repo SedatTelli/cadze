@@ -1,0 +1,63 @@
+THIRD-PARTY SOFTWARE NOTICES
+Cadze — Free & Open Source CAD Viewer
+============================================================
+
+Cadze is NOT affiliated with, endorsed by, or sponsored by Autodesk, Inc.
+AutoCAD® and DWG® are registered trademarks of Autodesk, Inc.
+
+------------------------------------------------------------
+1. GNU LibreDWG  (DWG file format support via dwg2dxf.exe)
+------------------------------------------------------------
+License  : GNU General Public License v3.0 (GPLv3)
+Source   : https://www.gnu.org/software/libredwg/
+Copyright: Free Software Foundation, Inc.
+
+Cadze uses LibreDWG as a separate, independent process (dwg2dxf.exe).
+Communication occurs only via command-line interface (arm's-length usage),
+keeping Cadze's own codebase independent from the GPLv3 obligation.
+
+The dwg2dxf.exe binary is distributed alongside Cadze. Its source code
+and the full GPLv3 license text are available at:
+  https://www.gnu.org/software/libredwg/
+
+------------------------------------------------------------
+2. Pixi.js  (WebGL2 rendering engine)
+------------------------------------------------------------
+License  : MIT License
+Source   : https://pixijs.com / https://github.com/pixijs/pixijs
+Copyright: 2013–2024 Mathew Groves, Chad Engler
+
+------------------------------------------------------------
+3. dxf-parser  (DXF file parsing)
+------------------------------------------------------------
+License  : MIT License
+Source   : https://github.com/gdsestimating/dxf-parser
+Copyright: GDS Estimating
+
+------------------------------------------------------------
+4. i18next  (Internationalization framework)
+------------------------------------------------------------
+License  : MIT License
+Source   : https://www.i18next.com
+Copyright: i18next contributors
+
+------------------------------------------------------------
+5. Tauri  (Desktop application framework — Rust + WebView)
+------------------------------------------------------------
+License  : MIT OR Apache-2.0
+Source   : https://tauri.app / https://github.com/tauri-apps/tauri
+Copyright: 2019–2024 Tauri Contributors
+
+------------------------------------------------------------
+6. Vite  (Build tool)
+------------------------------------------------------------
+License  : MIT License
+Source   : https://vitejs.dev
+Copyright: 2019–2024 Evan You and Vite Contributors
+
+------------------------------------------------------------
+SHX FONT NOTICE
+------------------------------------------------------------
+Cadze does NOT include or distribute any SHX font files owned by Autodesk
+(simplex.shx, romans.shx, etc.). Missing fonts are substituted with
+open-source alternatives and the user is informed accordingly.
