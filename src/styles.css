@@ -472,6 +472,55 @@ html, body {
   .canvas-wrap { width: 100vw !important; height: 100vh !important; }
 }
 
+/* ─── ABOUT MODAL ───────────────────────────── */
+.about-modal-inner { max-width: 460px; width: 100%; }
+
+.about-body { padding: 0 4px; }
+
+.about-logo-hex { font-size: 18px; color: var(--accent); }
+
+.about-name {
+  font-size: 26px; font-weight: 800; letter-spacing: 3px;
+  color: var(--accent); text-align: center; margin-top: 8px;
+}
+.about-version {
+  font-size: 12px; color: var(--text-muted); text-align: center;
+  margin-bottom: 6px;
+}
+.about-desc {
+  font-size: 12px; color: var(--text-secondary); text-align: center;
+  line-height: 1.6; margin-bottom: 4px;
+}
+.about-sep {
+  height: 1px; background: var(--border); margin: 14px 0;
+}
+.about-section-title {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px;
+}
+.about-legal {
+  font-size: 11.5px; color: var(--text-secondary); line-height: 1.65;
+}
+.about-legal strong { color: var(--text-primary); font-weight: 600; }
+
+.about-deps { display: flex; flex-direction: column; gap: 5px; }
+.about-dep-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; color: var(--text-secondary);
+  padding: 3px 8px; border-radius: 4px; background: var(--bg-secondary);
+}
+.about-dep-lic {
+  font-size: 10.5px; color: var(--text-muted);
+  background: var(--bg-panel); padding: 1px 6px; border-radius: 3px;
+  border: 1px solid var(--border);
+}
+.about-links { text-align: center; }
+.about-link {
+  font-size: 12px; color: var(--accent); text-decoration: none;
+  opacity: 0.8;
+}
+.about-link:hover { opacity: 1; text-decoration: underline; }
+
 /* ─── HELP MODAL ────────────────────────────── */
 .help-overlay {
   display: none; position: fixed; inset: 0; z-index: 2000;

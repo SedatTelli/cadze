@@ -373,6 +373,51 @@
       </div>
     </div>
 
+    <!-- ═══ ABOUT MODAL ════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="about-modal">
+      <div class="modal about-modal-inner">
+        <div class="modal-header">
+          <span class="about-logo-hex">⬡</span>
+          <span class="modal-title">About Cadze</span>
+          <button class="modal-close" id="about-close">✕</button>
+        </div>
+        <div class="modal-body about-body">
+          <div class="about-name">CADZE</div>
+          <div class="about-version" id="about-version">v0.2.0</div>
+          <div class="about-desc">Free &amp; open-source DWG/DXF viewer and editor<br>Built with Tauri v2 · Pixi.js v8 · WebGL2</div>
+
+          <div class="about-sep"></div>
+
+          <div class="about-section-title">Legal Notice</div>
+          <div class="about-legal">
+            Cadze is an <strong>independent open-source project</strong> and is <strong>not affiliated with, endorsed by, or sponsored by Autodesk, Inc.</strong>
+            AutoCAD®, DWG®, and DXF® are registered trademarks of Autodesk, Inc.<br><br>
+            DWG support is provided via <strong>LibreDWG</strong> (GNU GPLv3), which runs as a separate process.
+            Cadze's own source code is licensed under the <strong>MIT License</strong>.<br><br>
+            No SHX fonts or any Autodesk-owned assets are distributed with this software.
+            For critical engineering work, please verify results with the original authoring software.
+          </div>
+
+          <div class="about-sep"></div>
+
+          <div class="about-section-title">Third-Party Components</div>
+          <div class="about-deps">
+            <div class="about-dep-row"><span>LibreDWG</span><span class="about-dep-lic">GPLv3</span></div>
+            <div class="about-dep-row"><span>Pixi.js</span><span class="about-dep-lic">MIT</span></div>
+            <div class="about-dep-row"><span>dxf-parser</span><span class="about-dep-lic">MIT</span></div>
+            <div class="about-dep-row"><span>i18next</span><span class="about-dep-lic">MIT</span></div>
+            <div class="about-dep-row"><span>Tauri</span><span class="about-dep-lic">MIT / Apache-2.0</span></div>
+          </div>
+
+          <div class="about-sep"></div>
+
+          <div class="about-links">
+            <a class="about-link" id="about-github" href="#">⬡ github.com/SedatTelli/cadze</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ HELP MODAL ══════════════════════════════════════════════ -->
     <div class="help-overlay" id="help-modal">
       <div class="help-window">

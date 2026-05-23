@@ -18,6 +18,7 @@ async function main(): Promise<void> {
   setupSettings();
   setupInfobar();
   setupHelp();
+  setupAbout();
   setupZoomButtons();
   setupTabNew();
 
@@ -114,6 +115,25 @@ function setupHelp(): void {
   });
   modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.classList.remove('visible');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('visible')) {
+      modal.classList.remove('visible');
+    }
+  });
+}
+
+function setupAbout(): void {
+  const modal = document.getElementById('about-modal')!;
+  document.getElementById('about-close')!.addEventListener('click', () => {
+    modal.classList.remove('visible');
+  });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.remove('visible');
+  });
+  document.getElementById('about-github')!.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.open('https://github.com/SedatTelli/cadze', '_blank');
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modal.classList.contains('visible')) {

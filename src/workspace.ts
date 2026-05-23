@@ -1060,17 +1060,16 @@ function showHelp(): void {
 }
 
 function showAbout(): void {
-  const msg = 'Cadze v0.1 — Free & Open Source CAD Viewer\nDXF · DWG · STL\ngithub.com/sedattelli/cadze';
-  const el = document.createElement('div');
-  el.id = '_about';
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center';
-  el.innerHTML = `<div style="background:#1e1e24;border:1px solid #2a2a3a;border-radius:12px;padding:32px 40px;max-width:360px;text-align:center;color:#e8e8f0;font-size:13px;line-height:1.7">
-    <div style="font-size:22px;font-weight:700;color:#00e5ff;letter-spacing:1px;margin-bottom:16px">⬡ CADZE</div>
-    <div style="white-space:pre-line;color:#8888aa">${msg}</div>
-    <button onclick="this.closest('#_about').remove()" style="margin-top:24px;background:transparent;border:1px solid #2a2a3a;color:#8888aa;padding:6px 20px;border-radius:6px;cursor:pointer">Close</button>
-  </div>`;
-  document.body.appendChild(el);
-  el.addEventListener('click', (e) => { if (e.target === el) el.remove(); });
+  const modal = document.getElementById('about-modal')!;
+  modal.classList.add('visible');
+
+  // Fetch real version from Tauri once
+  const verEl = document.getElementById('about-version');
+  if (verEl && '__TAURI_INTERNALS__' in window) {
+    import('@tauri-apps/api/core').then(({ invoke }) =>
+      invoke<string>('app_version').then(v => { verEl.textContent = 'v' + v; })
+    );
+  }
 }
 
 // ── Layer panel ────────────────────────────────────────────────────────────────
