@@ -305,6 +305,11 @@ function setupRendererCallbacks(state: RendererState): void {
 
 // ── Central command dispatcher ─────────────────────────────────────────────────
 
+export async function openFilePath(path: string): Promise<void> {
+  const loaded = await loadFromPath(path);
+  await showWorkspace(loaded);
+}
+
 export function executeCmd(cmd: string): void {
   switch (cmd) {
     case 'open':

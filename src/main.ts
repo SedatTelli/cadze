@@ -25,6 +25,16 @@ async function main(): Promise<void> {
   document.addEventListener('lang-changed', () => {
     applyLabels();
   });
+
+  // Open file passed via command-line argument (Windows file association)
+  if ('__TAURI_INTERNALS__' in window) {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const startupFile = await invoke<string | null>('get_startup_file');
+    if (startupFile) {
+      const { openFilePath } = await import('./workspace');
+      await openFilePath(startupFile);
+    }
+  }
 }
 
 function applyLabels(): void {

@@ -1,8 +1,50 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::Mutex;
 use sys_locale::get_locale;
 use tauri::Manager;
+
+// ── Startup file (passed as argv[1] via file association) ─────────────────────
+
+struct StartupFile(Mutex<Option<String>>);
+
+#[tauri::command]
+fn get_startup_file(state: tauri::State<'_, StartupFile>) -> Option<String> {
+    state.0.lock().unwrap().take()
+}
+
+// ── Windows file association self-registration ────────────────────────────────
+
+#[cfg(target_os = "windows")]
+fn self_register(exe_path: &str) {
+    use winreg::enums::*;
+    use winreg::RegKey;
+
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let icon_val    = format!("\"{}\",0", exe_path);
+    let command_val = format!("\"{}\" \"%1\"", exe_path);
+
+    let entries: &[(&str, &str)] = &[
+        ("Software\\Classes\\.dwg",                                          "Cadze.DrawingFile"),
+        ("Software\\Classes\\.dxf",                                          "Cadze.DrawingFile"),
+        ("Software\\Classes\\.dwg\\OpenWithProgids\\Cadze.DrawingFile",      ""),
+        ("Software\\Classes\\.dxf\\OpenWithProgids\\Cadze.DrawingFile",      ""),
+        ("Software\\Classes\\Cadze.DrawingFile",                             "CAD Drawing File"),
+        ("Software\\Classes\\Cadze.DrawingFile\\DefaultIcon",                &icon_val),
+        ("Software\\Classes\\Cadze.DrawingFile\\shell\\open\\command",       &command_val),
+        ("Software\\Cadze\\Capabilities",                                    ""),
+        ("Software\\Cadze\\Capabilities\\FileAssociations\\.dwg",            "Cadze.DrawingFile"),
+        ("Software\\Cadze\\Capabilities\\FileAssociations\\.dxf",            "Cadze.DrawingFile"),
+        ("Software\\RegisteredApplications\\Cadze",                          "Software\\Cadze\\Capabilities"),
+    ];
+
+    for (path, value) in entries {
+        if let Ok((key, _)) = hkcu.create_subkey(path) {
+            let _ = key.set_value("", value);
+        }
+    }
+}
 
 // ── Locale ────────────────────────────────────────────────────────────────────
 
@@ -210,7 +252,19 @@ fn map_dwg_version(code: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Collect file path passed via file association (argv[1])
+    let startup_file: Option<String> = std::env::args()
+        .skip(1)
+        .find(|a| !a.starts_with('-'));
+
+    // Register .dwg/.dxf file associations in Windows registry (release builds only)
+    #[cfg(all(target_os = "windows", not(debug_assertions)))]
+    if let Ok(exe) = std::env::current_exe() {
+        self_register(&exe.to_string_lossy());
+    }
+
     tauri::Builder::default()
+        .manage(StartupFile(Mutex::new(startup_file)))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(|_app| {
@@ -220,6 +274,7 @@ pub fn run() {
             get_system_locale,
             app_version,
             process_cad_file,
+            get_startup_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
