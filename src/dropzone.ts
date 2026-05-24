@@ -2,7 +2,7 @@ import { t } from './i18n';
 import { loadFile, addRecentFile, getRecentFiles, formatTimeAgo } from './dxf-loader';
 import { showWorkspace } from './workspace';
 
-const SUPPORTED_EXTS = new Set(['dxf', 'dwg', 'stl']);
+const SUPPORTED_EXTS = new Set(['dxf', 'dwg']);
 
 export function setupDropzone(): void {
   const area      = document.getElementById('dropzone-area')!;
@@ -67,7 +67,7 @@ async function openTauriDialog(): Promise<void> {
     const result = await open({
       multiple: false,
       filters: [
-        { name: 'CAD Files', extensions: ['dwg', 'dxf', 'stl'] },
+        { name: 'CAD Files', extensions: ['dwg', 'dxf'] },
         { name: 'All Files', extensions: ['*'] },
       ],
     });

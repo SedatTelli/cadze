@@ -3,9 +3,10 @@ import {
   bulgeToArc, arcMidAngle, arcBBox, ptToArcDist, angleInArcSpan,
   nearestOnCircle, nearestT, lineLineIntersect,
   sampleBSpline, uniformOpenKnots,
+  transformEntity, matTranslate, matRotate, matAroundPivot, matScale as geoMatScale,
 } from './geo';
 
-export type Tool = 'pan' | 'zoom-window' | 'measure' | 'note' | 'angle-measure' | 'area-measure' | 'trim' | 'extend' | 'offset';
+export type Tool = 'pan' | 'zoom-window' | 'measure' | 'note' | 'angle-measure' | 'area-measure' | 'trim' | 'extend' | 'offset' | 'move' | 'copy' | 'rotate' | 'scale';
 export type SnapType = 'endpoint' | 'midpoint' | 'center' | 'intersection' | 'perpendicular' | 'nearest' | 'none';
 
 export interface SnapPoint { x: number; y: number; type: SnapType; }
@@ -36,6 +37,9 @@ export interface RendererState {
   onFps: (fps: number) => void;
   onSelectionChange: (entities: any[]) => void;
   onToolAction?: (tool: Tool, entity: any, worldX: number, worldY: number) => void;
+  onTransformAction?: (entities: any[], dx: number, dy: number, copy: boolean) => void;
+  onRotateAction?: (entities: any[], pivotX: number, pivotY: number, angle: number) => void;
+  onScaleAction?: (entities: any[], pivotX: number, pivotY: number, factor: number) => void;
 }
 
 export interface AABB {
@@ -357,6 +361,17 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
   let quadTree: QuadTree | null = null;
   let visLayersRef = new Set<string>();
 
+  // Transform tool state (MOVE, COPY, ROTATE, SCALE)
+  interface TransformPick {
+    entities: any[];
+    baseWX: number; baseWY: number;   // world-space pick point
+    pivotX: number; pivotY: number;   // for rotate/scale: pivot = entity bbox center
+    baseAngle: number;                // for rotate: atan2 from pivot to pick point
+    baseDist: number;                 // for scale: distance from pivot to pick point
+  }
+  let transformPick: TransformPick | null = null;
+  let transformCurWX = 0, transformCurWY = 0; // current cursor world pos
+
   // FPS
   let fpsFrames = 0, fpsLast = performance.now();
 
@@ -369,11 +384,14 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
         measurePt1 = null; zoomStart = null; zoomRect = null;
         selBoxStart = null; selBoxRect = null;
         anglePts = []; areaPts = [];
+        transformPick = null;
       } else {
         app.canvas.style.cursor = 'crosshair';
         if (tool !== 'measure')       measurePt1 = null;
         if (tool !== 'angle-measure') anglePts = [];
         if (tool !== 'area-measure')  areaPts = [];
+        if (tool !== 'move' && tool !== 'copy' && tool !== 'rotate' && tool !== 'scale')
+          transformPick = null;
       }
     },
     getTool:      () => currentTool,
@@ -489,6 +507,35 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
       const last = areaPts[areaPts.length-1];
       overlay.moveTo(toSX(last.scx),toSY(last.scy)).lineTo(mouseScreen.x,mouseScreen.y)
              .stroke({ color: 0xcc44ff, width: 1, alpha: 0.6 });
+    }
+
+    // ── Transform tool preview (MOVE/COPY/ROTATE/SCALE) ──────────────────────
+    if (transformPick && (currentTool === 'move' || currentTool === 'copy' ||
+                          currentTool === 'rotate' || currentTool === 'scale')) {
+      const { entities, baseWX, baseWY, pivotX, pivotY, baseAngle, baseDist } = transformPick;
+      const scx = scene.scale.x, ox = scene.x, oy = scene.y;
+      const GHOST = 0x00e5ff;
+      for (const ent of entities) {
+        let ghost: any;
+        if (currentTool === 'move' || currentTool === 'copy') {
+          const dx = transformCurWX - baseWX, dy = transformCurWY - baseWY;
+          ghost = transformEntity(ent, matTranslate(dx, dy));
+        } else if (currentTool === 'rotate') {
+          const curAngle = Math.atan2(transformCurWY - pivotY, transformCurWX - pivotX);
+          const angle    = curAngle - baseAngle;
+          ghost = transformEntity(ent, matAroundPivot({ x: pivotX, y: pivotY }, matRotate(angle)));
+        } else {
+          const curDist = Math.sqrt((transformCurWX-pivotX)**2 + (transformCurWY-pivotY)**2);
+          const factor  = baseDist > 1e-9 ? curDist / baseDist : 1;
+          ghost = transformEntity(ent, matAroundPivot({ x: pivotX, y: pivotY }, geoMatScale(factor, factor)));
+        }
+        drawEntityHighlight(overlay, ghost, GHOST, scx, scx, ox, oy);
+      }
+      // Cross at base/pivot
+      const bsx = toSX(currentTool === 'move' || currentTool === 'copy' ? baseWX : pivotX);
+      const bsy = toSY(currentTool === 'move' || currentTool === 'copy' ? -baseWY : -pivotY);
+      overlay.moveTo(bsx-6,bsy).lineTo(bsx+6,bsy).moveTo(bsx,bsy-6).lineTo(bsx,bsy+6)
+             .stroke({ color: 0xffff00, width: 1.5 });
     }
 
     // ── Zoom window rect ──────────────────────────────────────────────────────
@@ -653,10 +700,96 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
       } else if (currentTool === 'note') {
         const sc = toScene(sx, sy);
         state.onNotePlace(sc.scx, sc.scy, sx, sy);
+
+      } else if (currentTool === 'move' || currentTool === 'copy') {
+        const wx = (sx - scene.x) / scene.scale.x;
+        const wy = -((sy - scene.y) / scene.scale.y);
+        if (!transformPick) {
+          // Phase 1: pick entity
+          const tol = 8 / scene.scale.x;
+          const hit = hitTestEntities(wx, wy, spatialEntities, tol, quadTree);
+          const targets = hit
+            ? (selectedEntities.has(hit) && selectedEntities.size > 1
+                ? [...selectedEntities] : [hit])
+            : ([...selectedEntities].length > 0 ? [...selectedEntities] : []);
+          if (targets.length > 0) {
+            transformPick = { entities: targets, baseWX: wx, baseWY: wy,
+              pivotX: wx, pivotY: wy, baseAngle: 0, baseDist: 0 };
+            transformCurWX = wx; transformCurWY = wy;
+            app.canvas.style.cursor = 'move';
+          }
+        } else {
+          // Phase 2: place
+          const dx = wx - transformPick.baseWX, dy = wy - transformPick.baseWY;
+          state.onTransformAction?.(transformPick.entities, dx, dy, currentTool === 'copy');
+          transformPick = null;
+          app.canvas.style.cursor = 'crosshair';
+        }
+
+      } else if (currentTool === 'rotate') {
+        const wx = (sx - scene.x) / scene.scale.x;
+        const wy = -((sy - scene.y) / scene.scale.y);
+        if (!transformPick) {
+          const tol = 8 / scene.scale.x;
+          const hit = hitTestEntities(wx, wy, spatialEntities, tol, quadTree);
+          const targets = hit
+            ? (selectedEntities.has(hit) && selectedEntities.size > 1
+                ? [...selectedEntities] : [hit])
+            : ([...selectedEntities].length > 0 ? [...selectedEntities] : []);
+          if (targets.length > 0) {
+            // Pivot = centroid of entity centers
+            let px = 0, py = 0;
+            for (const ent of targets) {
+              const bb = computeEntityBBox(ent);
+              if (bb) { px += (bb.minX + bb.maxX) / 2; py += (bb.minY + bb.maxY) / 2; }
+            }
+            px /= targets.length; py /= targets.length;
+            const baseAngle = Math.atan2(wy - py, wx - px);
+            transformPick = { entities: targets, baseWX: wx, baseWY: wy,
+              pivotX: px, pivotY: py, baseAngle, baseDist: 0 };
+            transformCurWX = wx; transformCurWY = wy;
+          }
+        } else {
+          const curAngle = Math.atan2(wy - transformPick.pivotY, wx - transformPick.pivotX);
+          const angle = curAngle - transformPick.baseAngle;
+          state.onRotateAction?.(transformPick.entities, transformPick.pivotX, transformPick.pivotY, angle);
+          transformPick = null;
+          app.canvas.style.cursor = 'crosshair';
+        }
+
+      } else if (currentTool === 'scale') {
+        const wx = (sx - scene.x) / scene.scale.x;
+        const wy = -((sy - scene.y) / scene.scale.y);
+        if (!transformPick) {
+          const tol = 8 / scene.scale.x;
+          const hit = hitTestEntities(wx, wy, spatialEntities, tol, quadTree);
+          const targets = hit
+            ? (selectedEntities.has(hit) && selectedEntities.size > 1
+                ? [...selectedEntities] : [hit])
+            : ([...selectedEntities].length > 0 ? [...selectedEntities] : []);
+          if (targets.length > 0) {
+            let px = 0, py = 0;
+            for (const ent of targets) {
+              const bb = computeEntityBBox(ent);
+              if (bb) { px += (bb.minX + bb.maxX) / 2; py += (bb.minY + bb.maxY) / 2; }
+            }
+            px /= targets.length; py /= targets.length;
+            const baseDist = Math.sqrt((wx - px) ** 2 + (wy - py) ** 2);
+            transformPick = { entities: targets, baseWX: wx, baseWY: wy,
+              pivotX: px, pivotY: py, baseAngle: 0, baseDist };
+            transformCurWX = wx; transformCurWY = wy;
+          }
+        } else {
+          const curDist = Math.sqrt((wx - transformPick.pivotX) ** 2 + (wy - transformPick.pivotY) ** 2);
+          const factor = transformPick.baseDist > 1e-9 ? curDist / transformPick.baseDist : 1;
+          state.onScaleAction?.(transformPick.entities, transformPick.pivotX, transformPick.pivotY, factor);
+          transformPick = null;
+          app.canvas.style.cursor = 'crosshair';
+        }
       }
     }
 
-    if (e.button === 2) { measurePt1 = null; anglePts = []; areaPts = []; }
+    if (e.button === 2) { measurePt1 = null; anglePts = []; areaPts = []; transformPick = null; }
   });
 
   window.addEventListener('mousemove', (e: MouseEvent) => {
@@ -704,6 +837,12 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
         hoveredEntity = hit;
         app.canvas.style.cursor = hit ? 'pointer' : 'default';
       }
+    }
+
+    // Update transform cursor world position
+    if (transformPick) {
+      transformCurWX = sceneX;
+      transformCurWY = -sceneY;
     }
 
     state.onCoordUpdate(sceneX, -sceneY);
@@ -798,6 +937,8 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
       measurePt1 = null; zoomStart = null; zoomRect = null;
       anglePts = []; areaPts = [];
       selBoxStart = null; selBoxRect = null;
+      transformPick = null;
+      app.canvas.style.cursor = currentTool === 'pan' ? 'default' : 'crosshair';
     }
   });
 

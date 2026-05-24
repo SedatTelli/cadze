@@ -1,97 +1,151 @@
-{
-  "app": { "version": "v0.1-beta" },
-  "titlebar": { "settings": "设置", "minimize": "最小化", "close": "关闭" },
-  "dropzone": {
-    "title": "将CAD文件拖放到此处",
-    "formats": "DWG · DXF · STL",
-    "or": "或",
-    "browse": "选择文件  Ctrl+O",
-    "recent": "最近文件"
-  },
-  "footer": { "local": "本地处理", "opensource": "开源" },
-  "infobar": {
-    "dwg_partial": "检测到 DWG {{version}} — 使用开源引擎，部分高级元素可能缺失。",
-    "report": "报告问题",
-    "dwg_unsupported": "DWG {{version}} — 支持有限。建议转换为DXF以获得最佳效果。"
-  },
-  "toolbar": {
-    "zoom": "缩放 / 平移",
-    "measure": "测量",
-    "edit": "编辑",
-    "home": "适合视图",
-    "pan": "平移  V",
-    "zoom_window": "框选缩放  Z",
-    "measure_dist": "距离测量  M",
-    "measure_angle": "角度测量  A",
-    "measure_area": "面积测量  R",
-    "note": "添加注释  N",
-    "trim": "修剪  TR",
-    "extend": "延伸  EX",
-    "offset": "偏移  O",
-    "fit": "适合视图  Home",
-    "zoom_in": "放大",
-    "zoom_out": "缩小"
-  },
-  "menu": {
-    "file": "文件",
-    "view": "视图",
-    "tools": "工具",
-    "help": "帮助",
-    "open": "打开…",
-    "export_png": "导出 PNG",
-    "export_pdf": "打印 / 导出 PDF",
-    "export_dxf": "导出 DXF",
-    "close_file": "关闭文件",
-    "zoom_in": "放大",
-    "zoom_out": "缩小",
-    "fit_view": "适合视图",
-    "toggle_bg": "浅色背景",
-    "fullscreen": "全屏",
-    "tool_pan": "平移 / 选择",
-    "tool_zoom_window": "框选缩放",
-    "tool_measure": "距离测量",
-    "tool_angle": "角度测量",
-    "tool_area": "面积测量",
-    "tool_note": "添加注释",
-    "toggle_osnap": "切换捕捉",
-    "layers_all": "显示所有图层",
-    "layers_none": "隐藏所有图层",
-    "undo": "撤销",
-    "redo": "重做",
-    "clear_measure": "清除测量",
-    "clear_notes": "清除所有注释",
-    "user_manual": "用户手册",
-    "report": "报告问题",
-    "about": "关于 Cadze",
-    "settings": "设置…"
-  },
-  "ctx": {
-    "fit_view": "适合视图",
-    "zoom_in": "放大",
-    "zoom_out": "缩小",
-    "tool_pan": "平移",
-    "tool_zoom_window": "框选缩放",
-    "tool_measure": "距离测量",
-    "clear_measure": "清除测量",
-    "export_png": "导出 PNG",
-    "export_pdf": "打印 / PDF"
-  },
-  "layers": "图层",
-  "properties": "属性",
-  "no_selection": "未选择对象",
-  "props": { "type": "类型", "layer": "图层", "length": "长度", "radius": "半径", "color": "颜色", "angle": "角度", "area": "面积", "perimeter": "周长", "selected": "已选择", "delete_hint": "Del — 删除所选" },
-  "statusbar": { "coords": "X: {{x}}  Y: {{y}}", "zoom": "1:{{z}}" },
-  "cmd": { "hint": "输入命令...", "zoom_all": "ZOOM: 全部显示", "unknown": "未知命令: {{cmd}}" },
-  "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
-  "pro": "Cadze Pro — 即将推出",
-  "settings": { "title": "设置", "language": "语言", "keyboard": "键盘快捷键" },
-  "langs": { "en": "English", "tr": "Türkçe", "de": "Deutsch", "zh": "中文", "ja": "日本語" },
-  "loading": { "parsing": "正在解析文件...", "rendering": "正在渲染 {{n}} 个对象..." },
-  "time": {
-    "just_now": "刚才",
-    "minutes_ago": "{{m}} 分钟前",
-    "hours_ago": "{{h}} 小时前",
-    "days_ago": "{{d}} 天前"
-  },
-  "note": { "placeholder": "输入注释… (Enter 保存，Esc 取消)" }
+﻿{
+    "app":  {
+                "version":  "v0.1-beta"
+            },
+    "titlebar":  {
+                     "settings":  "è®¾ç½®",
+                     "minimize":  "æœ€å°åŒ–",
+                     "close":  "å…³é—­"
+                 },
+    "dropzone":  {
+                     "title":  "å°†CADæ–‡ä»¶æ‹–æ”¾åˆ°æ­¤å¤„",
+                     "formats":  "DWG Â· DXF Â· STL",
+                     "or":  "æˆ–",
+                     "browse":  "é€‰æ‹©æ–‡ä»¶  Ctrl+O",
+                     "recent":  "æœ€è¿‘æ–‡ä»¶"
+                 },
+    "footer":  {
+                   "local":  "æœ¬åœ°å¤„ç†",
+                   "opensource":  "å¼€æº"
+               },
+    "infobar":  {
+                    "dwg_partial":  "æ£€æµ‹åˆ° DWG {{version}} â€” ä½¿ç”¨å¼€æºå¼•æ“Žï¼Œéƒ¨åˆ†é«˜çº§å…ƒç´ å¯èƒ½ç¼ºå¤±ã€‚",
+                    "report":  "æŠ¥å‘Šé—®é¢˜",
+                    "dwg_unsupported":  "DWG {{version}} â€” æ”¯æŒæœ‰é™ã€‚å»ºè®®è½¬æ¢ä¸ºDXFä»¥èŽ·å¾—æœ€ä½³æ•ˆæžœã€‚"
+                },
+    "toolbar":  {
+                    "zoom":  "ç¼©æ”¾ / å¹³ç§»",
+                    "measure":  "æµ‹é‡",
+                    "edit":  "ç¼–è¾‘",
+                    "home":  "é€‚åˆè§†å›¾",
+                    "pan":  "å¹³ç§»  V",
+                    "zoom_window":  "æ¡†é€‰ç¼©æ”¾  Z",
+                    "measure_dist":  "è·ç¦»æµ‹é‡  M",
+                    "measure_angle":  "è§’åº¦æµ‹é‡  A",
+                    "measure_area":  "é¢ç§¯æµ‹é‡  R",
+                    "note":  "æ·»åŠ æ³¨é‡Š  N",
+                    "trim":  "ä¿®å‰ª  TR",
+                    "extend":  "å»¶ä¼¸  EX",
+                    "offset":  "åç§»  O",
+                    "fit":  "é€‚åˆè§†å›¾  Home",
+                    "zoom_in":  "æ”¾å¤§",
+                    "zoom_out":  "ç¼©å°",
+                    "move":  "移动  MV",
+                    "copy":  "复制  CP",
+                    "rotate":  "旋转  RO",
+                    "scale":  "缩放  SC"
+                },
+    "menu":  {
+                 "file":  "æ–‡ä»¶",
+                 "view":  "è§†å›¾",
+                 "tools":  "å·¥å…·",
+                 "help":  "å¸®åŠ©",
+                 "open":  "æ‰“å¼€â€¦",
+                 "export_png":  "å¯¼å‡º PNG",
+                 "export_pdf":  "æ‰“å° / å¯¼å‡º PDF",
+                 "export_dxf":  "å¯¼å‡º DXF",
+                 "close_file":  "å…³é—­æ–‡ä»¶",
+                 "zoom_in":  "æ”¾å¤§",
+                 "zoom_out":  "ç¼©å°",
+                 "fit_view":  "é€‚åˆè§†å›¾",
+                 "toggle_bg":  "æµ…è‰²èƒŒæ™¯",
+                 "fullscreen":  "å…¨å±",
+                 "tool_pan":  "å¹³ç§» / é€‰æ‹©",
+                 "tool_zoom_window":  "æ¡†é€‰ç¼©æ”¾",
+                 "tool_measure":  "è·ç¦»æµ‹é‡",
+                 "tool_angle":  "è§’åº¦æµ‹é‡",
+                 "tool_area":  "é¢ç§¯æµ‹é‡",
+                 "tool_note":  "æ·»åŠ æ³¨é‡Š",
+                 "toggle_osnap":  "åˆ‡æ¢æ•æ‰",
+                 "layers_all":  "æ˜¾ç¤ºæ‰€æœ‰å›¾å±‚",
+                 "layers_none":  "éšè—æ‰€æœ‰å›¾å±‚",
+                 "undo":  "æ’¤é”€",
+                 "redo":  "é‡åš",
+                 "clear_measure":  "æ¸…é™¤æµ‹é‡",
+                 "clear_notes":  "æ¸…é™¤æ‰€æœ‰æ³¨é‡Š",
+                 "user_manual":  "ç”¨æˆ·æ‰‹å†Œ",
+                 "report":  "æŠ¥å‘Šé—®é¢˜",
+                 "about":  "å…³äºŽ Cadze",
+                 "settings":  "è®¾ç½®â€¦",
+                 "tool_move":  "移动",
+                 "tool_copy":  "复制",
+                 "tool_rotate":  "旋转",
+                 "tool_scale":  "缩放"
+             },
+    "ctx":  {
+                "fit_view":  "é€‚åˆè§†å›¾",
+                "zoom_in":  "æ”¾å¤§",
+                "zoom_out":  "ç¼©å°",
+                "tool_pan":  "å¹³ç§»",
+                "tool_zoom_window":  "æ¡†é€‰ç¼©æ”¾",
+                "tool_measure":  "è·ç¦»æµ‹é‡",
+                "clear_measure":  "æ¸…é™¤æµ‹é‡",
+                "export_png":  "å¯¼å‡º PNG",
+                "export_pdf":  "æ‰“å° / PDF"
+            },
+    "layers":  "å›¾å±‚",
+    "properties":  "å±žæ€§",
+    "no_selection":  "æœªé€‰æ‹©å¯¹è±¡",
+    "props":  {
+                  "type":  "ç±»åž‹",
+                  "layer":  "å›¾å±‚",
+                  "length":  "é•¿åº¦",
+                  "radius":  "åŠå¾„",
+                  "color":  "é¢œè‰²",
+                  "angle":  "è§’åº¦",
+                  "area":  "é¢ç§¯",
+                  "perimeter":  "å‘¨é•¿",
+                  "selected":  "å·²é€‰æ‹©",
+                  "delete_hint":  "Del â€” åˆ é™¤æ‰€é€‰"
+              },
+    "statusbar":  {
+                      "coords":  "X: {{x}}  Y: {{y}}",
+                      "zoom":  "1:{{z}}"
+                  },
+    "cmd":  {
+                "hint":  "è¾“å…¥å‘½ä»¤...",
+                "zoom_all":  "ZOOM: å…¨éƒ¨æ˜¾ç¤º",
+                "unknown":  "æœªçŸ¥å‘½ä»¤: {{cmd}}"
+            },
+    "export":  {
+                   "pdf":  "PDF",
+                   "png":  "PNG",
+                   "dxf":  "DXF"
+               },
+    "pro":  "Cadze Pro â€” å³å°†æŽ¨å‡º",
+    "settings":  {
+                     "title":  "è®¾ç½®",
+                     "language":  "è¯­è¨€",
+                     "keyboard":  "é”®ç›˜å¿«æ·é”®"
+                 },
+    "langs":  {
+                  "en":  "English",
+                  "tr":  "TÃ¼rkÃ§e",
+                  "de":  "Deutsch",
+                  "zh":  "ä¸­æ–‡",
+                  "ja":  "æ—¥æœ¬èªž"
+              },
+    "loading":  {
+                    "parsing":  "æ­£åœ¨è§£æžæ–‡ä»¶...",
+                    "rendering":  "æ­£åœ¨æ¸²æŸ“ {{n}} ä¸ªå¯¹è±¡..."
+                },
+    "time":  {
+                 "just_now":  "åˆšæ‰",
+                 "minutes_ago":  "{{m}} åˆ†é’Ÿå‰",
+                 "hours_ago":  "{{h}} å°æ—¶å‰",
+                 "days_ago":  "{{d}} å¤©å‰"
+             },
+    "note":  {
+                 "placeholder":  "è¾“å…¥æ³¨é‡Šâ€¦ (Enter ä¿å­˜ï¼ŒEsc å–æ¶ˆ)"
+             }
 }

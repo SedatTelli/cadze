@@ -62,6 +62,11 @@
             <div class="menu-cmd" data-cmd="tool-area">Measure Area <kbd>R</kbd></div>
             <div class="menu-cmd" data-cmd="tool-note">Add Note <kbd>N</kbd></div>
             <div class="menu-sep"></div>
+            <div class="menu-cmd" data-cmd="tool-move">Move <kbd>MV</kbd></div>
+            <div class="menu-cmd" data-cmd="tool-copy">Copy <kbd>CP</kbd></div>
+            <div class="menu-cmd" data-cmd="tool-rotate">Rotate <kbd>RO</kbd></div>
+            <div class="menu-cmd" data-cmd="tool-scale">Scale <kbd>SC</kbd></div>
+            <div class="menu-sep"></div>
             <div class="menu-cmd" data-cmd="toggle-osnap">Toggle OSNAP <kbd>F3</kbd></div>
             <div class="menu-sep"></div>
             <div class="menu-cmd" data-cmd="layers-all">Show All Layers</div>
@@ -106,10 +111,10 @@
             <line x1="14" y1="32" x2="28" y2="32"/>
           </svg>
           <div class="dropzone-title" id="dropzone-title">Drop CAD File Here</div>
-          <div class="dropzone-formats" id="dropzone-formats">DWG · DXF · STL</div>
+          <div class="dropzone-formats" id="dropzone-formats">DWG · DXF</div>
           <div class="dropzone-or" id="dropzone-or">or</div>
           <button class="dropzone-browse" id="dropzone-browse">Browse File &nbsp; Ctrl+O</button>
-          <input type="file" id="file-input" accept=".dxf,.dwg,.stl" style="display:none" />
+          <input type="file" id="file-input" accept=".dxf,.dwg" style="display:none" />
         </div>
         <div class="recent-files" id="recent-section" style="display:none">
           <div class="recent-title" id="recent-title">Recent Files</div>
@@ -229,6 +234,41 @@
                 <line x1="9" y1="7" x2="9" y2="11" stroke-dasharray="2,1.5"/>
               </svg>
             </button>
+            <div class="tool-sep"></div>
+            <!-- Move -->
+            <button class="tool-btn" id="tool-move" title="Move (MV)" data-tip="Move  MV">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="6" height="6" rx="1" stroke-dasharray="2,1.5"/>
+                <rect x="10" y="10" width="6" height="6" rx="1"/>
+                <line x1="8" y1="5" x2="10" y2="5"/><line x1="13" y1="8" x2="13" y2="10"/>
+                <polyline points="9.5,4 11,5 9.5,6"/><polyline points="12,9.5 13,11 14,9.5"/>
+              </svg>
+            </button>
+            <!-- Copy -->
+            <button class="tool-btn" id="tool-copy" title="Copy (CP)" data-tip="Copy  CP">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="6" height="6" rx="1"/>
+                <rect x="10" y="10" width="6" height="6" rx="1"/>
+                <line x1="8" y1="5" x2="10" y2="5" stroke-dasharray="2,1.5"/>
+                <line x1="13" y1="8" x2="13" y2="10" stroke-dasharray="2,1.5"/>
+              </svg>
+            </button>
+            <!-- Rotate -->
+            <button class="tool-btn" id="tool-rotate" title="Rotate (RO)" data-tip="Rotate  RO">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 9 A5 5 0 1 1 9 14"/>
+                <polyline points="5,5 4,9 8,9"/>
+              </svg>
+            </button>
+            <!-- Scale -->
+            <button class="tool-btn" id="tool-scale" title="Scale (SC)" data-tip="Scale  SC">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="8" width="8" height="8" rx="1"/>
+                <rect x="8" y="2" width="8" height="8" rx="1" fill="none"/>
+                <line x1="10" y1="8" x2="8" y2="10"/>
+              </svg>
+            </button>
+            <div class="tool-sep"></div>
             <!-- Fit View -->
             <button class="tool-btn" id="tool-fit" title="Fit View (Home)" data-tip="Fit View  Home">
               <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">

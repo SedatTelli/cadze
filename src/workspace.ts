@@ -11,6 +11,7 @@ import {
   arcLineAngularTs, arcArcAngularTs,
   trimArcByAngularTs, extendArcToBoundaries,
   circleLineIntersectTs, angleInArcSpan,
+  transformEntity, matTranslate, matAroundPivot, matRotate, matScale as geoMatScale,
 } from './geo';
 import type { LoadedFile } from './dxf-loader';
 
@@ -276,6 +277,9 @@ function setupRendererCallbacks(state: RendererState): void {
     else if (tool === 'extend') extendEntity(entity, wx, wy);
     else if (tool === 'offset') offsetEntity(entity, wx, wy);
   };
+  state.onTransformAction = (entities, dx, dy, copy) => moveEntities(entities, dx, dy, copy);
+  state.onRotateAction    = (entities, px, py, angle) => rotateEntities(entities, px, py, angle);
+  state.onScaleAction     = (entities, px, py, factor) => scaleEntities(entities, px, py, factor);
   state.onMeasureResult = (dist, dx, dy) => {
     const bar = document.getElementById('status-measure');
     const val = document.getElementById('status-measure-val');
@@ -390,6 +394,18 @@ export function executeCmd(cmd: string): void {
     case 'tool-offset':
       setActiveTool('offset');
       break;
+    case 'tool-move':
+      setActiveTool('move');
+      break;
+    case 'tool-copy':
+      setActiveTool('copy');
+      break;
+    case 'tool-rotate':
+      setActiveTool('rotate');
+      break;
+    case 'tool-scale':
+      setActiveTool('scale');
+      break;
     case 'toggle-osnap':
       toggleOsnap();
       break;
@@ -491,6 +507,10 @@ export function setupToolbar(): void {
   document.getElementById('tool-trim')?.addEventListener('click', () => setActiveTool('trim'));
   document.getElementById('tool-extend')?.addEventListener('click', () => setActiveTool('extend'));
   document.getElementById('tool-offset')?.addEventListener('click', () => setActiveTool('offset'));
+  document.getElementById('tool-move')?.addEventListener('click', () => setActiveTool('move'));
+  document.getElementById('tool-copy')?.addEventListener('click', () => setActiveTool('copy'));
+  document.getElementById('tool-rotate')?.addEventListener('click', () => setActiveTool('rotate'));
+  document.getElementById('tool-scale')?.addEventListener('click', () => setActiveTool('scale'));
 }
 
 function setActiveTool(name: Tool): void {
@@ -628,6 +648,14 @@ function handleCommand(raw: string): void {
       setActiveTool('extend'); break;
     case 'OFFSET': case 'O': case 'OF':
       setActiveTool('offset'); break;
+    case 'MOVE': case 'MV': case 'M':
+      setActiveTool('move'); break;
+    case 'COPY': case 'CP': case 'CO':
+      setActiveTool('copy'); break;
+    case 'ROTATE': case 'RO':
+      setActiveTool('rotate'); break;
+    case 'SC':
+      setActiveTool('scale'); break;
     default:
       // OFFSET with distance: e.g. "OFFSET 50"
       if (raw.startsWith('OFFSET ') || raw.startsWith('O ') || raw.startsWith('OF ')) {
@@ -1238,6 +1266,119 @@ function offsetEntity(entity: any, worldX: number, worldY: number): void {
     () => { // redo: push it back
       currentDxf.entities.push(ne);
       rerender();
+    }
+  );
+}
+
+function moveEntities(entities: any[], dx: number, dy: number, copy: boolean): void {
+  if (!rendererState || !currentDxf) return;
+  const m = matTranslate(dx, dy);
+  const newEnts = entities.map(e => transformEntity(e, m));
+
+  if (!copy) {
+    for (let i = 0; i < entities.length; i++) {
+      const idx = currentDxf.entities.indexOf(entities[i]);
+      if (idx !== -1) currentDxf.entities.splice(idx, 1, newEnts[i]);
+    }
+  } else {
+    currentDxf.entities.push(...newEnts);
+  }
+
+  rendererState.clearSelection();
+  rerender();
+
+  const origSnapshot = entities.map(e => JSON.parse(JSON.stringify(e)));
+  pushEditOp(copy ? 'Copy' : 'Move',
+    () => {
+      if (!copy) {
+        for (let i = 0; i < newEnts.length; i++) {
+          const idx = currentDxf.entities.indexOf(newEnts[i]);
+          if (idx !== -1) currentDxf.entities.splice(idx, 1, entities[i]);
+        }
+      } else {
+        for (const ne of newEnts) {
+          const idx = currentDxf.entities.indexOf(ne);
+          if (idx !== -1) currentDxf.entities.splice(idx, 1);
+        }
+      }
+      rendererState?.clearSelection(); rerender();
+    },
+    () => {
+      if (!copy) {
+        for (let i = 0; i < entities.length; i++) {
+          const idx = currentDxf.entities.indexOf(entities[i]);
+          if (idx !== -1) currentDxf.entities.splice(idx, 1, newEnts[i]);
+        }
+      } else {
+        currentDxf.entities.push(...newEnts);
+      }
+      rendererState?.clearSelection(); rerender();
+    }
+  );
+  void origSnapshot;
+}
+
+function rotateEntities(entities: any[], px: number, py: number, angle: number): void {
+  if (!rendererState || !currentDxf) return;
+  const m = matAroundPivot({ x: px, y: py }, matRotate(angle));
+  const newEnts = entities.map(e => transformEntity(e, m));
+
+  for (let i = 0; i < entities.length; i++) {
+    const idx = currentDxf.entities.indexOf(entities[i]);
+    if (idx !== -1) currentDxf.entities.splice(idx, 1, newEnts[i]);
+  }
+
+  rendererState.clearSelection();
+  rerender();
+
+  pushEditOp('Rotate',
+    () => {
+      const mInv = matAroundPivot({ x: px, y: py }, matRotate(-angle));
+      for (let i = 0; i < newEnts.length; i++) {
+        const idx = currentDxf.entities.indexOf(newEnts[i]);
+        if (idx !== -1) currentDxf.entities.splice(idx, 1, transformEntity(newEnts[i], mInv));
+      }
+      rendererState?.clearSelection(); rerender();
+    },
+    () => {
+      for (let i = 0; i < entities.length; i++) {
+        const idx = currentDxf.entities.indexOf(entities[i]);
+        if (idx !== -1) currentDxf.entities.splice(idx, 1, newEnts[i]);
+      }
+      rendererState?.clearSelection(); rerender();
+    }
+  );
+}
+
+function scaleEntities(entities: any[], px: number, py: number, factor: number): void {
+  if (!rendererState || !currentDxf) return;
+  if (Math.abs(factor) < 1e-9) return;
+  const m = matAroundPivot({ x: px, y: py }, geoMatScale(factor, factor));
+  const newEnts = entities.map(e => transformEntity(e, m));
+
+  for (let i = 0; i < entities.length; i++) {
+    const idx = currentDxf.entities.indexOf(entities[i]);
+    if (idx !== -1) currentDxf.entities.splice(idx, 1, newEnts[i]);
+  }
+
+  rendererState.clearSelection();
+  rerender();
+
+  pushEditOp('Scale',
+    () => {
+      const mInv = matAroundPivot({ x: px, y: py }, geoMatScale(1 / factor, 1 / factor));
+      for (let i = 0; i < newEnts.length; i++) {
+        const idx = currentDxf.entities.indexOf(newEnts[i]);
+        if (idx !== -1) currentDxf.entities.splice(idx, 1, transformEntity(newEnts[i], mInv));
+      }
+      rendererState?.clearSelection(); rerender();
+    },
+    () => {
+      for (let i = 0; i < entities.length; i++) {
+        const idx = currentDxf.entities.indexOf(entities[i]);
+        if (idx !== -1) currentDxf.entities.splice(idx, 1, newEnts[i]);
+      }
+      rendererState?.clearSelection(); rerender();
     }
   );
 }

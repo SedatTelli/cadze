@@ -492,3 +492,118 @@ export function extendLineToBoundary(
     extendP2,
   };
 }
+
+// ── Transformation Matrix (3×3 homogeneous, row-major) ────────────────────────
+// [a, b, tx]
+// [c, d, ty]
+// [0, 0,  1]
+export interface Mat3 {
+  a: number; b: number; tx: number;
+  c: number; d: number; ty: number;
+}
+
+export function matIdentity(): Mat3 {
+  return { a: 1, b: 0, tx: 0, c: 0, d: 1, ty: 0 };
+}
+
+export function matTranslate(dx: number, dy: number): Mat3 {
+  return { a: 1, b: 0, tx: dx, c: 0, d: 1, ty: dy };
+}
+
+export function matRotate(angle: number): Mat3 {
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  return { a: cos, b: -sin, tx: 0, c: sin, d: cos, ty: 0 };
+}
+
+export function matScale(sx: number, sy: number): Mat3 {
+  return { a: sx, b: 0, tx: 0, c: 0, d: sy, ty: 0 };
+}
+
+export function matMul(m1: Mat3, m2: Mat3): Mat3 {
+  return {
+    a:  m1.a * m2.a  + m1.b * m2.c,
+    b:  m1.a * m2.b  + m1.b * m2.d,
+    tx: m1.a * m2.tx + m1.b * m2.ty + m1.tx,
+    c:  m1.c * m2.a  + m1.d * m2.c,
+    d:  m1.c * m2.b  + m1.d * m2.d,
+    ty: m1.c * m2.tx + m1.d * m2.ty + m1.ty,
+  };
+}
+
+export function matApply(m: Mat3, p: Vec2): Vec2 {
+  return { x: m.a * p.x + m.b * p.y + m.tx, y: m.c * p.x + m.d * p.y + m.ty };
+}
+
+/** Build a matrix that rotates/scales around a given pivot point. */
+export function matAroundPivot(pivot: Vec2, inner: Mat3): Mat3 {
+  return matMul(matMul(matTranslate(pivot.x, pivot.y), inner), matTranslate(-pivot.x, -pivot.y));
+}
+
+/**
+ * Apply a Mat3 transform to a DXF entity (deep-clone first).
+ * Handles LINE, CIRCLE, ARC, LWPOLYLINE, POLYLINE, TEXT, MTEXT, INSERT, SPLINE.
+ */
+export function transformEntity(entity: any, m: Mat3): any {
+  const e = JSON.parse(JSON.stringify(entity));
+  e._bbox = null;
+
+  const pt  = (v: any) => { const r = matApply(m, { x: v.x ?? 0, y: v.y ?? 0 }); v.x = r.x; v.y = r.y; };
+  const scl = Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)); // uniform scale factor
+
+  switch (e.type) {
+    case 'LINE':
+      if (e.vertices?.length >= 2) { pt(e.vertices[0]); pt(e.vertices[1]); }
+      break;
+
+    case 'CIRCLE':
+      if (e.center) pt(e.center);
+      e.radius = (e.radius ?? 0) * scl;
+      break;
+
+    case 'ARC': {
+      if (e.center) pt(e.center);
+      e.radius = (e.radius ?? 0) * scl;
+      // Rotate start/end angles by the matrix rotation
+      const rot = Math.atan2(m.c, m.a);
+      e.startAngle = (e.startAngle ?? 0) + rot;
+      e.endAngle   = (e.endAngle   ?? 0) + rot;
+      break;
+    }
+
+    case 'LWPOLYLINE':
+    case 'POLYLINE':
+      (e.vertices ?? []).forEach((v: any) => pt(v));
+      break;
+
+    case 'TEXT':
+    case 'MTEXT':
+      if (e.insertionPoint) pt(e.insertionPoint);
+      if (e.position)       pt(e.position);
+      e.textHeight = (e.textHeight ?? 1) * scl;
+      break;
+
+    case 'INSERT':
+      if (e.position) pt(e.position);
+      e.xScale = (e.xScale ?? 1) * Math.sqrt(m.a * m.a + m.c * m.c);
+      e.yScale = (e.yScale ?? 1) * Math.sqrt(m.b * m.b + m.d * m.d);
+      e.rotation = (e.rotation ?? 0) + Math.atan2(m.c, m.a) * (180 / Math.PI);
+      break;
+
+    case 'SPLINE':
+      (e.controlPoints ?? []).forEach((v: any) => pt(v));
+      (e.fitPoints     ?? []).forEach((v: any) => pt(v));
+      break;
+
+    case 'ELLIPSE':
+      if (e.center) pt(e.center);
+      if (e.majorAxisEndPoint) {
+        const ep = matApply(m, { x: e.majorAxisEndPoint.x ?? 0, y: e.majorAxisEndPoint.y ?? 0 });
+        const o  = matApply(m, { x: 0, y: 0 });
+        e.majorAxisEndPoint.x = ep.x - o.x;
+        e.majorAxisEndPoint.y = ep.y - o.y;
+      }
+      break;
+  }
+
+  return e;
+}

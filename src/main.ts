@@ -81,6 +81,10 @@ function applyLabels(): void {
   document.getElementById('tool-trim')?.setAttribute('data-tip', t('toolbar.trim'));
   document.getElementById('tool-extend')?.setAttribute('data-tip', t('toolbar.extend'));
   document.getElementById('tool-offset')?.setAttribute('data-tip', t('toolbar.offset'));
+  document.getElementById('tool-move')?.setAttribute('data-tip', t('toolbar.move'));
+  document.getElementById('tool-copy')?.setAttribute('data-tip', t('toolbar.copy'));
+  document.getElementById('tool-rotate')?.setAttribute('data-tip', t('toolbar.rotate'));
+  document.getElementById('tool-scale')?.setAttribute('data-tip', t('toolbar.scale'));
   document.getElementById('tool-fit')?.setAttribute('data-tip', t('toolbar.fit'));
 
   // Command input placeholder
@@ -116,6 +120,10 @@ function applyLabels(): void {
     'tool-angle':       'menu.tool_angle',
     'tool-area':        'menu.tool_area',
     'tool-note':        'menu.tool_note',
+    'tool-move':        'menu.tool_move',
+    'tool-copy':        'menu.tool_copy',
+    'tool-rotate':      'menu.tool_rotate',
+    'tool-scale':       'menu.tool_scale',
     'toggle-osnap':     'menu.toggle_osnap',
     'layers-all':       'menu.layers_all',
     'layers-none':      'menu.layers_none',

@@ -1,18 +1,18 @@
-{
+﻿{
   "app": { "version": "v0.1-beta" },
   "titlebar": { "settings": "Settings", "minimize": "Minimize", "close": "Close" },
   "dropzone": {
     "title": "Drop CAD File Here",
-    "formats": "DWG · DXF · STL",
+    "formats": "DWG Â· DXF Â· STL",
     "or": "or",
     "browse": "Browse File  Ctrl+O",
     "recent": "Recent Files"
   },
   "footer": { "local": "locally processed", "opensource": "open-source" },
   "infobar": {
-    "dwg_partial": "DWG {{version}} detected — open-source engine used, some advanced elements may be missing.",
+    "dwg_partial": "DWG {{version}} detected â€” open-source engine used, some advanced elements may be missing.",
     "report": "Report Issue",
-    "dwg_unsupported": "DWG {{version}} — this version has limited support. Convert to DXF for best results."
+    "dwg_unsupported": "DWG {{version}} â€” this version has limited support. Convert to DXF for best results."
   },
   "toolbar": {
     "zoom": "Zoom / Pan",
@@ -28,6 +28,10 @@
     "trim": "Trim  TR",
     "extend": "Extend  EX",
     "offset": "Offset  O",
+    "move": "Move  MV",
+    "copy": "Copy  CP",
+    "rotate": "Rotate  RO",
+    "scale": "Scale  SC",
     "fit": "Fit View  Home",
     "zoom_in": "Zoom In",
     "zoom_out": "Zoom Out"
@@ -37,7 +41,7 @@
     "view": "View",
     "tools": "Tools",
     "help": "Help",
-    "open": "Open…",
+    "open": "Openâ€¦",
     "export_png": "Export PNG",
     "export_pdf": "Print / Export PDF",
     "export_dxf": "Export DXF",
@@ -53,6 +57,10 @@
     "tool_angle": "Measure Angle",
     "tool_area": "Measure Area",
     "tool_note": "Add Note",
+    "tool_move": "Move",
+    "tool_copy": "Copy",
+    "tool_rotate": "Rotate",
+    "tool_scale": "Scale",
     "toggle_osnap": "Toggle OSNAP",
     "layers_all": "Show All Layers",
     "layers_none": "Hide All Layers",
@@ -63,7 +71,7 @@
     "user_manual": "User Manual",
     "report": "Report Issue",
     "about": "About Cadze",
-    "settings": "Settings…"
+    "settings": "Settingsâ€¦"
   },
   "ctx": {
     "fit_view": "Fit View",
@@ -79,7 +87,7 @@
   "layers": "Layers",
   "properties": "Properties",
   "no_selection": "No object selected",
-  "props": { "type": "Type", "layer": "Layer", "length": "Length", "radius": "Radius", "color": "Color", "angle": "Angle", "area": "Area", "perimeter": "Perimeter", "selected": "Selected", "delete_hint": "Del — delete selected" },
+  "props": { "type": "Type", "layer": "Layer", "length": "Length", "radius": "Radius", "color": "Color", "angle": "Angle", "area": "Area", "perimeter": "Perimeter", "selected": "Selected", "delete_hint": "Del â€” delete selected" },
   "statusbar": { "coords": "X: {{x}}  Y: {{y}}", "zoom": "1:{{z}}" },
   "cmd": {
     "hint": "Type a command...",
@@ -87,7 +95,7 @@
     "unknown": "Unknown command: {{cmd}}"
   },
   "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
-  "pro": "Cadze Pro — Coming Soon",
+  "pro": "Cadze Pro â€” Coming Soon",
   "settings": {
     "title": "Settings",
     "language": "Language",
@@ -95,10 +103,10 @@
   },
   "langs": {
     "en": "English",
-    "tr": "Türkçe",
+    "tr": "TÃ¼rkÃ§e",
     "de": "Deutsch",
-    "zh": "中文",
-    "ja": "日本語"
+    "zh": "ä¸­æ–‡",
+    "ja": "æ—¥æœ¬èªž"
   },
   "loading": { "parsing": "Parsing file...", "rendering": "Rendering {{n}} entities..." },
   "time": {
@@ -107,5 +115,5 @@
     "hours_ago": "{{h}} hr ago",
     "days_ago": "{{d}} days ago"
   },
-  "note": { "placeholder": "Type your note… (Enter to save, Esc to cancel)" }
+  "note": { "placeholder": "Type your noteâ€¦ (Enter to save, Esc to cancel)" }
 }
