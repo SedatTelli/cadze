@@ -14,7 +14,68 @@
     "report": "Report Issue",
     "dwg_unsupported": "DWG {{version}} — this version has limited support. Convert to DXF for best results."
   },
-  "toolbar": { "zoom": "Zoom / Pan", "measure": "Measure", "edit": "Edit", "home": "Fit View" },
+  "toolbar": {
+    "zoom": "Zoom / Pan",
+    "measure": "Measure",
+    "edit": "Edit",
+    "home": "Fit View",
+    "pan": "Pan  V",
+    "zoom_window": "Zoom Window  Z",
+    "measure_dist": "Measure  M",
+    "measure_angle": "Angle  A",
+    "measure_area": "Area  R",
+    "note": "Add Note  N",
+    "trim": "Trim  TR",
+    "extend": "Extend  EX",
+    "offset": "Offset  O",
+    "fit": "Fit View  Home",
+    "zoom_in": "Zoom In",
+    "zoom_out": "Zoom Out"
+  },
+  "menu": {
+    "file": "File",
+    "view": "View",
+    "tools": "Tools",
+    "help": "Help",
+    "open": "Open…",
+    "export_png": "Export PNG",
+    "export_pdf": "Print / Export PDF",
+    "export_dxf": "Export DXF",
+    "close_file": "Close File",
+    "zoom_in": "Zoom In",
+    "zoom_out": "Zoom Out",
+    "fit_view": "Fit View",
+    "toggle_bg": "Light Background",
+    "fullscreen": "Fullscreen",
+    "tool_pan": "Pan / Select",
+    "tool_zoom_window": "Zoom Window",
+    "tool_measure": "Measure Distance",
+    "tool_angle": "Measure Angle",
+    "tool_area": "Measure Area",
+    "tool_note": "Add Note",
+    "toggle_osnap": "Toggle OSNAP",
+    "layers_all": "Show All Layers",
+    "layers_none": "Hide All Layers",
+    "undo": "Undo",
+    "redo": "Redo",
+    "clear_measure": "Clear Measurements",
+    "clear_notes": "Clear All Notes",
+    "user_manual": "User Manual",
+    "report": "Report Issue",
+    "about": "About Cadze",
+    "settings": "Settings…"
+  },
+  "ctx": {
+    "fit_view": "Fit View",
+    "zoom_in": "Zoom In",
+    "zoom_out": "Zoom Out",
+    "tool_pan": "Pan",
+    "tool_zoom_window": "Zoom Window",
+    "tool_measure": "Measure Distance",
+    "clear_measure": "Clear Measurements",
+    "export_png": "Export PNG",
+    "export_pdf": "Print / PDF"
+  },
   "layers": "Layers",
   "properties": "Properties",
   "no_selection": "No object selected",
@@ -29,7 +90,8 @@
   "pro": "Cadze Pro — Coming Soon",
   "settings": {
     "title": "Settings",
-    "language": "Language"
+    "language": "Language",
+    "keyboard": "Keyboard Shortcuts"
   },
   "langs": {
     "en": "English",
@@ -38,5 +100,12 @@
     "zh": "中文",
     "ja": "日本語"
   },
-  "loading": { "parsing": "Parsing file...", "rendering": "Rendering {{n}} entities..." }
+  "loading": { "parsing": "Parsing file...", "rendering": "Rendering {{n}} entities..." },
+  "time": {
+    "just_now": "just now",
+    "minutes_ago": "{{m}} min ago",
+    "hours_ago": "{{h}} hr ago",
+    "days_ago": "{{d}} days ago"
+  },
+  "note": { "placeholder": "Type your note… (Enter to save, Esc to cancel)" }
 }

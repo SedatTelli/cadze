@@ -10,6 +10,7 @@ import {
   extendLineToBoundary,
   arcLineAngularTs, arcArcAngularTs,
   trimArcByAngularTs, extendArcToBoundaries,
+  circleLineIntersectTs, angleInArcSpan,
 } from './geo';
 import type { LoadedFile } from './dxf-loader';
 
@@ -414,6 +415,9 @@ export function executeCmd(cmd: string): void {
     case 'about':
       showAbout();
       break;
+    case 'settings':
+      document.dispatchEvent(new Event('cadze:open-settings'));
+      break;
   }
 }
 
@@ -669,7 +673,88 @@ function exportPng(): void {
 
 function exportDxf(): void {
   if (!currentDxf) return;
-  alert('DXF export — coming soon in v0.2');
+  const R2D = 180 / Math.PI;
+  const lines: string[] = [];
+  const g = (code: number, val: string | number) => { lines.push(String(code)); lines.push(String(val)); };
+
+  // HEADER
+  g(0, 'SECTION'); g(2, 'HEADER');
+  g(9, '$ACADVER'); g(1, 'AC1015');
+  g(0, 'ENDSEC');
+
+  // ENTITIES
+  g(0, 'SECTION'); g(2, 'ENTITIES');
+
+  for (const e of (currentDxf.entities as any[])) {
+    if (!layerVisibility.has(e.layer ?? '0')) continue;
+    const layer = e.layer ?? '0';
+    const color = e.colorIndex ?? 256;
+
+    if (e.type === 'LINE') {
+      const v = e.vertices;
+      if (!v || v.length < 2) continue;
+      g(0, 'LINE'); g(8, layer); g(62, color);
+      g(10, (v[0].x ?? 0).toFixed(6)); g(20, (v[0].y ?? 0).toFixed(6)); g(30, (v[0].z ?? 0).toFixed(6));
+      g(11, (v[1].x ?? 0).toFixed(6)); g(21, (v[1].y ?? 0).toFixed(6)); g(31, (v[1].z ?? 0).toFixed(6));
+
+    } else if (e.type === 'CIRCLE') {
+      g(0, 'CIRCLE'); g(8, layer); g(62, color);
+      g(10, (e.center?.x ?? 0).toFixed(6)); g(20, (e.center?.y ?? 0).toFixed(6)); g(30, (e.center?.z ?? 0).toFixed(6));
+      g(40, (e.radius ?? 0).toFixed(6));
+
+    } else if (e.type === 'ARC') {
+      g(0, 'ARC'); g(8, layer); g(62, color);
+      g(10, (e.center?.x ?? 0).toFixed(6)); g(20, (e.center?.y ?? 0).toFixed(6)); g(30, (e.center?.z ?? 0).toFixed(6));
+      g(40, (e.radius ?? 0).toFixed(6));
+      g(50, ((e.startAngle ?? 0) * R2D).toFixed(6));
+      g(51, ((e.endAngle ?? Math.PI * 2) * R2D).toFixed(6));
+
+    } else if (e.type === 'LWPOLYLINE' || e.type === 'POLYLINE') {
+      const verts = e.vertices;
+      if (!verts?.length) continue;
+      g(0, 'LWPOLYLINE'); g(8, layer); g(62, color);
+      g(90, verts.length);
+      g(70, e.closed ? 1 : 0);
+      for (const v of verts) {
+        g(10, (v.x ?? 0).toFixed(6)); g(20, (v.y ?? 0).toFixed(6));
+        if (v.bulge) g(42, (v.bulge).toFixed(6));
+      }
+
+    } else if (e.type === 'TEXT' || e.type === 'MTEXT') {
+      const ins = e.insertionPoint ?? e.position ?? { x: 0, y: 0, z: 0 };
+      g(0, 'TEXT'); g(8, layer); g(62, color);
+      g(10, (ins.x ?? 0).toFixed(6)); g(20, (ins.y ?? 0).toFixed(6)); g(30, (ins.z ?? 0).toFixed(6));
+      g(40, (e.textHeight ?? 1).toFixed(6));
+      g(1, String(e.text ?? ''));
+
+    } else if (e.type === 'SPLINE') {
+      const cps = e.controlPoints ?? e.vertices;
+      if (!cps?.length) continue;
+      const deg = e.degreeOfSplineCurve ?? 3;
+      const knots: number[] = e.knots ?? [];
+      g(0, 'SPLINE'); g(8, layer); g(62, color);
+      g(70, 0); g(71, deg);
+      g(72, knots.length); g(73, cps.length);
+      for (const k of knots) g(40, k.toFixed(6));
+      for (const pt of cps) {
+        g(10, (pt.x ?? 0).toFixed(6)); g(20, (pt.y ?? 0).toFixed(6)); g(30, (pt.z ?? 0).toFixed(6));
+      }
+    }
+  }
+
+  g(0, 'ENDSEC');
+  g(0, 'EOF');
+
+  const content = lines.join('\n');
+  const blob = new Blob([content], { type: 'application/dxf' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const tab = tabs.find(t => t.id === activeTabId);
+  const baseName = (tab?.loaded.name ?? 'export').replace(/\.[^.]+$/, '');
+  link.download = `${baseName}.dxf`;
+  link.href = url;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 // ── Notes ──────────────────────────────────────────────────────────────────────
@@ -918,7 +1003,14 @@ function trimEntity(entity: any, worldX: number, worldY: number): void {
   const p2: Vec2 = { x: v[1].x, y: v[1].y };
   const clickT = nearestT({ x: worldX, y: worldY }, p1, p2);
   const boundaries = entityToLineBoundaries(entity);
-  const ts = collectIntersectionTs(p1, p2, boundaries);
+  const arcBounds = entityToArcBoundaries(entity);
+  const arcTs = arcBounds.flatMap(arc =>
+    circleLineIntersectTs(arc.cx, arc.cy, arc.r, p1, p2).filter(t => {
+      const wx = p1.x + t * (p2.x - p1.x), wy = p1.y + t * (p2.y - p1.y);
+      return angleInArcSpan(Math.atan2(wy - arc.cy, wx - arc.cx), arc.startAngle, arc.endAngle, arc.ccw);
+    })
+  );
+  const ts = [...collectIntersectionTs(p1, p2, boundaries), ...arcTs];
   if (ts.length === 0) return;
   const segs = trimLineByTs(p1, p2, ts, clickT);
   const idx = currentDxf.entities.indexOf(entity);
@@ -1094,6 +1186,26 @@ function offsetEntity(entity: any, worldX: number, worldY: number): void {
     ne = JSON.parse(JSON.stringify(entity));
     ne.vertices[0] = { ...ne.vertices[0], x: np1.x, y: np1.y };
     ne.vertices[1] = { ...ne.vertices[1], x: np2.x, y: np2.y };
+    ne._bbox = null;
+
+  } else if (entity.type === 'CIRCLE') {
+    if (!entity.center) return;
+    const cx = entity.center.x as number, cy = entity.center.y as number;
+    const isOutside = (worldX - cx) ** 2 + (worldY - cy) ** 2 > (entity.radius as number) ** 2;
+    const newR = (entity.radius as number) + (isOutside ? offsetDistance : -offsetDistance);
+    if (newR <= 0) return;
+    ne = JSON.parse(JSON.stringify(entity));
+    ne.radius = newR;
+    ne._bbox = null;
+
+  } else if (entity.type === 'ARC') {
+    if (!entity.center) return;
+    const cx = entity.center.x as number, cy = entity.center.y as number;
+    const isOutside = (worldX - cx) ** 2 + (worldY - cy) ** 2 > (entity.radius as number) ** 2;
+    const newR = (entity.radius as number) + (isOutside ? offsetDistance : -offsetDistance);
+    if (newR <= 0) return;
+    ne = JSON.parse(JSON.stringify(entity));
+    ne.radius = newR;
     ne._bbox = null;
 
   } else if (entity.type === 'LWPOLYLINE' || entity.type === 'POLYLINE') {

@@ -248,8 +248,18 @@ function drawEntityHighlight(
       const v = entity.vertices;
       if (!v?.length) break;
       g.moveTo(sx(v[0].x), sy(v[0].y));
-      for (let i=1;i<v.length;i++) g.lineTo(sx(v[i].x), sy(v[i].y));
-      if (entity.closed) g.closePath();
+      const nHL = entity.closed ? v.length : v.length - 1;
+      for (let i = 0; i < nHL; i++) {
+        const a = v[i], b = v[(i + 1) % v.length];
+        const bulge = a.bulge ?? 0;
+        if (Math.abs(bulge) > 1e-9) {
+          const arc = bulgeToArc({ x: a.x, y: a.y }, { x: b.x, y: b.y }, bulge);
+          g.arc(sx(arc.cx), sy(arc.cy), arc.r * scx,
+                -arc.startAngle, -arc.endAngle, true);
+        } else {
+          g.lineTo(sx(b.x), sy(b.y));
+        }
+      }
       g.stroke({ color, width: W });
       break;
     }

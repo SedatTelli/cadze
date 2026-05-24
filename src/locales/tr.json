@@ -14,7 +14,68 @@
     "report": "Sorun Bildir",
     "dwg_unsupported": "DWG {{version}} — bu sürüm sınırlı desteklenmektedir. En iyi sonuç için DXF'e dönüştürün."
   },
-  "toolbar": { "zoom": "Yakınlaştır / Kaydır", "measure": "Ölçüm", "edit": "Düzenle", "home": "Tümünü Göster" },
+  "toolbar": {
+    "zoom": "Yakınlaştır / Kaydır",
+    "measure": "Ölçüm",
+    "edit": "Düzenle",
+    "home": "Tümünü Göster",
+    "pan": "Kaydır  V",
+    "zoom_window": "Zoom Penceresi  Z",
+    "measure_dist": "Uzaklık Ölç  M",
+    "measure_angle": "Açı Ölç  A",
+    "measure_area": "Alan Ölç  R",
+    "note": "Not Ekle  N",
+    "trim": "Kırp  TR",
+    "extend": "Uzat  EX",
+    "offset": "Öteye Kopyala  O",
+    "fit": "Tümünü Göster  Home",
+    "zoom_in": "Yakınlaştır",
+    "zoom_out": "Uzaklaştır"
+  },
+  "menu": {
+    "file": "Dosya",
+    "view": "Görünüm",
+    "tools": "Araçlar",
+    "help": "Yardım",
+    "open": "Aç…",
+    "export_png": "PNG Dışa Aktar",
+    "export_pdf": "Yazdır / PDF Dışa Aktar",
+    "export_dxf": "DXF Dışa Aktar",
+    "close_file": "Dosyayı Kapat",
+    "zoom_in": "Yakınlaştır",
+    "zoom_out": "Uzaklaştır",
+    "fit_view": "Tümünü Göster",
+    "toggle_bg": "Açık Arka Plan",
+    "fullscreen": "Tam Ekran",
+    "tool_pan": "Kaydır / Seç",
+    "tool_zoom_window": "Zoom Penceresi",
+    "tool_measure": "Uzaklık Ölç",
+    "tool_angle": "Açı Ölç",
+    "tool_area": "Alan Ölç",
+    "tool_note": "Not Ekle",
+    "toggle_osnap": "OSNAP Aç/Kapat",
+    "layers_all": "Tüm Katmanları Göster",
+    "layers_none": "Tüm Katmanları Gizle",
+    "undo": "Geri Al",
+    "redo": "Yinele",
+    "clear_measure": "Ölçümleri Temizle",
+    "clear_notes": "Tüm Notları Temizle",
+    "user_manual": "Kullanım Kılavuzu",
+    "report": "Sorun Bildir",
+    "about": "Cadze Hakkında",
+    "settings": "Ayarlar…"
+  },
+  "ctx": {
+    "fit_view": "Tümünü Göster",
+    "zoom_in": "Yakınlaştır",
+    "zoom_out": "Uzaklaştır",
+    "tool_pan": "Kaydır",
+    "tool_zoom_window": "Zoom Penceresi",
+    "tool_measure": "Uzaklık Ölç",
+    "clear_measure": "Ölçümleri Temizle",
+    "export_png": "PNG Dışa Aktar",
+    "export_pdf": "Yazdır / PDF"
+  },
   "layers": "Katmanlar",
   "properties": "Özellikler",
   "no_selection": "Nesne seçilmedi",
@@ -29,7 +90,8 @@
   "pro": "Cadze Pro — Çok Yakında",
   "settings": {
     "title": "Ayarlar",
-    "language": "Dil"
+    "language": "Dil",
+    "keyboard": "Klavye Kısayolları"
   },
   "langs": {
     "en": "English",
@@ -38,5 +100,12 @@
     "zh": "中文",
     "ja": "日本語"
   },
-  "loading": { "parsing": "Dosya okunuyor...", "rendering": "{{n}} nesne çiziliyor..." }
+  "loading": { "parsing": "Dosya okunuyor...", "rendering": "{{n}} nesne çiziliyor..." },
+  "time": {
+    "just_now": "az önce",
+    "minutes_ago": "{{m}} dk önce",
+    "hours_ago": "{{h}} saat önce",
+    "days_ago": "{{d}} gün önce"
+  },
+  "note": { "placeholder": "Notunuzu yazın… (Enter kaydet, Esc iptal)" }
 }

@@ -22,12 +22,10 @@ async function main(): Promise<void> {
   setupZoomButtons();
   setupTabNew();
 
-  // Re-apply all labels when language changes
   document.addEventListener('lang-changed', () => {
     applyLabels();
   });
 
-  // Open file passed via command-line argument (Windows file association)
   if ('__TAURI_INTERNALS__' in window) {
     const { invoke } = await import('@tauri-apps/api/core');
     const startupFile = await invoke<string | null>('get_startup_file');
@@ -36,6 +34,14 @@ async function main(): Promise<void> {
       await openFilePath(startupFile);
     }
   }
+}
+
+// Replace text of a menu/context-menu item while keeping <kbd> children intact
+function setMenuItemText(el: Element, text: string): void {
+  const kbds = Array.from(el.querySelectorAll('kbd'));
+  while (el.firstChild) el.removeChild(el.firstChild);
+  el.appendChild(document.createTextNode(text + (kbds.length ? ' ' : '')));
+  kbds.forEach(kbd => el.appendChild(kbd));
 }
 
 function applyLabels(): void {
@@ -58,16 +64,91 @@ function applyLabels(): void {
   // Settings modal
   document.getElementById('modal-title')!.textContent = t('settings.title');
   document.getElementById('lang-label')!.textContent = t('settings.language');
+  const kbLabel = document.getElementById('settings-keyboard-label');
+  if (kbLabel) kbLabel.textContent = t('settings.keyboard');
 
-  // Toolbar tooltips
+  // Toolbar data-tip tooltips
   document.getElementById('tool-zoom')?.setAttribute('data-tip', t('toolbar.zoom'));
   document.getElementById('tool-measure')?.setAttribute('data-tip', t('toolbar.measure'));
   document.getElementById('tool-edit')?.setAttribute('data-tip', t('toolbar.edit'));
   document.getElementById('tool-home')?.setAttribute('data-tip', t('toolbar.home'));
+  document.getElementById('tool-pan')?.setAttribute('data-tip', t('toolbar.pan'));
+  document.getElementById('tool-zoom-window')?.setAttribute('data-tip', t('toolbar.zoom_window'));
+  document.getElementById('tool-measure')?.setAttribute('data-tip', t('toolbar.measure_dist'));
+  document.getElementById('tool-angle')?.setAttribute('data-tip', t('toolbar.measure_angle'));
+  document.getElementById('tool-area')?.setAttribute('data-tip', t('toolbar.measure_area'));
+  document.getElementById('tool-note')?.setAttribute('data-tip', t('toolbar.note'));
+  document.getElementById('tool-trim')?.setAttribute('data-tip', t('toolbar.trim'));
+  document.getElementById('tool-extend')?.setAttribute('data-tip', t('toolbar.extend'));
+  document.getElementById('tool-offset')?.setAttribute('data-tip', t('toolbar.offset'));
+  document.getElementById('tool-fit')?.setAttribute('data-tip', t('toolbar.fit'));
 
   // Command input placeholder
   const cmdInput = document.getElementById('cmd-input') as HTMLInputElement;
   if (cmdInput) cmdInput.placeholder = t('cmd.hint');
+
+  // Note input placeholder
+  const noteInput = document.getElementById('note-input') as HTMLTextAreaElement | null;
+  if (noteInput) noteInput.placeholder = t('note.placeholder');
+
+  // Menubar — top-level labels
+  document.querySelectorAll<HTMLElement>('[data-menu]').forEach(item => {
+    const key = item.dataset.menu!;
+    const label = item.querySelector('.menu-label');
+    if (label) label.textContent = t(`menu.${key}`);
+  });
+
+  // Menubar — command items (data-cmd → menu.* key)
+  const menuCmdKey: Record<string, string> = {
+    'open':             'menu.open',
+    'export-png':       'menu.export_png',
+    'export-pdf':       'menu.export_pdf',
+    'export-dxf':       'menu.export_dxf',
+    'close-file':       'menu.close_file',
+    'zoom-in':          'menu.zoom_in',
+    'zoom-out':         'menu.zoom_out',
+    'fit-view':         'menu.fit_view',
+    'toggle-bg':        'menu.toggle_bg',
+    'fullscreen':       'menu.fullscreen',
+    'tool-pan':         'menu.tool_pan',
+    'tool-zoom-window': 'menu.tool_zoom_window',
+    'tool-measure':     'menu.tool_measure',
+    'tool-angle':       'menu.tool_angle',
+    'tool-area':        'menu.tool_area',
+    'tool-note':        'menu.tool_note',
+    'toggle-osnap':     'menu.toggle_osnap',
+    'layers-all':       'menu.layers_all',
+    'layers-none':      'menu.layers_none',
+    'undo':             'menu.undo',
+    'redo':             'menu.redo',
+    'clear-measure':    'menu.clear_measure',
+    'clear-notes':      'menu.clear_notes',
+    'user-manual':      'menu.user_manual',
+    'report':           'menu.report',
+    'about':            'menu.about',
+    'settings':         'menu.settings',
+  };
+  document.querySelectorAll<HTMLElement>('.menu-cmd[data-cmd]').forEach(el => {
+    const key = menuCmdKey[el.dataset.cmd!];
+    if (key) setMenuItemText(el, t(key));
+  });
+
+  // Context menu command items
+  const ctxCmdKey: Record<string, string> = {
+    'fit-view':         'ctx.fit_view',
+    'zoom-in':          'ctx.zoom_in',
+    'zoom-out':         'ctx.zoom_out',
+    'tool-pan':         'ctx.tool_pan',
+    'tool-zoom-window': 'ctx.tool_zoom_window',
+    'tool-measure':     'ctx.tool_measure',
+    'clear-measure':    'ctx.clear_measure',
+    'export-png':       'ctx.export_png',
+    'export-pdf':       'ctx.export_pdf',
+  };
+  document.querySelectorAll<HTMLElement>('.ctx-cmd[data-cmd]').forEach(el => {
+    const key = ctxCmdKey[el.dataset.cmd!];
+    if (key) setMenuItemText(el, t(key));
+  });
 
   // Render lang grid
   buildLangGrid();
@@ -105,6 +186,15 @@ function setupSettings(): void {
   });
   modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.classList.remove('visible');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('visible')) {
+      modal.classList.remove('visible');
+    }
+  });
+  // Allow workspace.ts to open settings via executeCmd('settings')
+  document.addEventListener('cadze:open-settings', () => {
+    modal.classList.add('visible');
   });
 }
 

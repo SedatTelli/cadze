@@ -81,6 +81,8 @@
             <div class="menu-sep"></div>
             <div class="menu-cmd" data-cmd="report">Report Issue</div>
             <div class="menu-cmd" data-cmd="about">About Cadze</div>
+            <div class="menu-sep"></div>
+            <div class="menu-cmd" data-cmd="settings">Settings…</div>
           </div>
         </div>
       </div>
@@ -241,7 +243,7 @@
           <div class="canvas-wrap" id="canvas-wrap">
             <div id="note-layer"></div>
             <div id="note-input-wrap">
-              <textarea id="note-input" rows="3" placeholder="Notu yaz… (Enter kaydet, Esc iptal)"></textarea>
+              <textarea id="note-input" rows="3" placeholder="Type your note… (Enter to save, Esc to cancel)"></textarea>
             </div>
             <div class="loading-overlay" id="loading-overlay">
               <div class="loading-spinner"></div>
@@ -354,7 +356,7 @@
             <div class="lang-grid" id="lang-grid"></div>
           </div>
           <div class="setting-row">
-            <div class="setting-label">Keyboard Shortcuts</div>
+            <div class="setting-label" id="settings-keyboard-label">Keyboard Shortcuts</div>
             <div class="shortcuts-grid">
               <div class="sc-row"><kbd>V</kbd> Pan / Select</div>
               <div class="sc-row"><kbd>Z</kbd> Zoom Window</div>

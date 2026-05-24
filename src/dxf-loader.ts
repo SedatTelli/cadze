@@ -1,4 +1,5 @@
 import DxfParser from 'dxf-parser';
+import { t } from './i18n';
 
 export interface LoadedFile {
   name: string;
@@ -108,8 +109,8 @@ export function getRecentFiles(): RecentFile[] {
 export function formatTimeAgo(ts: number): string {
   const diff = Date.now() - ts;
   const m = Math.floor(diff / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
-  if (d > 0) return `${d} gün önce`;
-  if (h > 0) return `${h} saat önce`;
-  if (m > 0) return `${m} dk önce`;
-  return 'az önce';
+  if (d > 0) return t('time.days_ago', { d });
+  if (h > 0) return t('time.hours_ago', { h });
+  if (m > 0) return t('time.minutes_ago', { m });
+  return t('time.just_now');
 }
