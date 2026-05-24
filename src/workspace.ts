@@ -3,11 +3,13 @@ import { loadFromPath } from './dxf-loader';
 import { HELP_HTML } from './help-content';
 import { createRenderer, renderDxf, getLayers, calcPolylineStats, type RendererState, type Tool } from './renderer';
 import {
-  type Vec2, type Seg,
+  type Vec2, type Seg, type ArcSpec,
   nearestT, sideOfLine,
   offsetLineSeg, offsetPolyline,
   collectIntersectionTs, trimLineByTs,
   extendLineToBoundary,
+  arcLineAngularTs, arcArcAngularTs,
+  trimArcByAngularTs, extendArcToBoundaries,
 } from './geo';
 import type { LoadedFile } from './dxf-loader';
 
@@ -866,6 +868,41 @@ function entityToLineBoundaries(exclude: any): Seg[] {
     }));
 }
 
+function arcSpecFromEntity(e: any): ArcSpec | null {
+  if (!e.center) return null;
+  return {
+    cx: e.center.x, cy: e.center.y,
+    r: e.radius ?? 0,
+    startAngle: e.startAngle ?? 0,
+    endAngle:   e.endAngle   ?? Math.PI * 2,
+    ccw: true,
+  };
+}
+
+function entityToArcBoundaries(exclude: any): ArcSpec[] {
+  if (!currentDxf) return [];
+  return (currentDxf.entities as any[])
+    .filter(e => e !== exclude && e.type === 'ARC'
+      && layerVisibility.has(e.layer ?? '0')
+      && e.center)
+    .map(arcSpecFromEntity)
+    .filter((a): a is ArcSpec => a !== null);
+}
+
+function arcAngularClickT(arc: ArcSpec, wx: number, wy: number): number {
+  const ang = Math.atan2(wy - arc.cy, wx - arc.cx);
+  const N = Math.PI * 2;
+  const norm = (x: number) => ((x % N) + N) % N;
+  let span: number;
+  if (arc.ccw) { span = norm(arc.endAngle) - norm(arc.startAngle); if (span < 0) span += N; }
+  else         { span = norm(arc.startAngle) - norm(arc.endAngle); if (span < 0) span += N; }
+  if (span < 1e-9) return 0.5;
+  let off: number;
+  if (arc.ccw) { off = norm(ang) - norm(arc.startAngle); if (off < 0) off += N; }
+  else         { off = norm(arc.startAngle) - norm(ang); if (off < 0) off += N; }
+  return off / span;
+}
+
 function pushEditOp(label: string, undoFn: () => void, redoFn: () => void): void {
   undoStack.push({ type: 'edit', label, undo: undoFn, redo: redoFn });
   redoStack.length = 0;
@@ -873,6 +910,7 @@ function pushEditOp(label: string, undoFn: () => void, redoFn: () => void): void
 
 function trimEntity(entity: any, worldX: number, worldY: number): void {
   if (!rendererState || !currentDxf) return;
+  if (entity.type === 'ARC') { trimArcEntity(entity, worldX, worldY); return; }
   if (entity.type !== 'LINE') return;
   const v = entity.vertices;
   if (!v || v.length < 2) return;
@@ -922,6 +960,7 @@ function trimEntity(entity: any, worldX: number, worldY: number): void {
 
 function extendEntity(entity: any, worldX: number, worldY: number): void {
   if (!rendererState || !currentDxf) return;
+  if (entity.type === 'ARC') { extendArcEntity(entity, worldX, worldY); return; }
   if (entity.type !== 'LINE') return;
   const v = entity.vertices;
   if (!v || v.length < 2) return;
@@ -953,6 +992,88 @@ function extendEntity(entity: any, worldX: number, worldY: number): void {
 
   if (isP2) entity.vertices[1] = { ...v[1], x: newPt.x, y: newPt.y };
   else      entity.vertices[0] = { ...v[0], x: newPt.x, y: newPt.y };
+  entity._bbox = null;
+  rendererState.clearSelection();
+  rerender();
+}
+
+function trimArcEntity(entity: any, worldX: number, worldY: number): void {
+  if (!rendererState || !currentDxf) return;
+  const arc = arcSpecFromEntity(entity);
+  if (!arc || arc.r < 1e-9) return;
+
+  const lineBounds  = entityToLineBoundaries(entity);
+  const arcBounds   = entityToArcBoundaries(entity);
+  const ts: number[] = [
+    ...lineBounds.flatMap(seg => arcLineAngularTs(arc, seg)),
+    ...arcBounds.flatMap(a2  => arcArcAngularTs(arc, a2)),
+  ];
+  if (ts.length === 0) return;
+
+  const clickAngT = arcAngularClickT(arc, worldX, worldY);
+  const slices    = trimArcByAngularTs(arc, ts, clickAngT);
+  const idx       = currentDxf.entities.indexOf(entity);
+  if (idx === -1) return;
+
+  const newEnts: any[] = slices.map(sl => {
+    const ne = JSON.parse(JSON.stringify(entity));
+    ne.startAngle = sl.startAngle;
+    ne.endAngle   = sl.endAngle;
+    ne._bbox      = null;
+    if (ne.center) { ne.center.x = arc.cx; ne.center.y = arc.cy; }
+    return ne;
+  });
+
+  pushEditOp('Trim Arc',
+    () => {
+      const cur = newEnts.length > 0
+        ? currentDxf.entities.indexOf(newEnts[0])
+        : Math.min(idx, currentDxf.entities.length);
+      if (newEnts.length > 0 && cur !== -1) currentDxf.entities.splice(cur, newEnts.length, entity);
+      else if (newEnts.length === 0) currentDxf.entities.splice(Math.min(idx, currentDxf.entities.length), 0, entity);
+      entity._bbox = null;
+      rendererState?.clearSelection(); rerender();
+    },
+    () => {
+      const cur = currentDxf.entities.indexOf(entity);
+      if (cur !== -1) currentDxf.entities.splice(cur, 1, ...newEnts);
+      rendererState?.clearSelection(); rerender();
+    }
+  );
+
+  currentDxf.entities.splice(idx, 1, ...newEnts);
+  rendererState.clearSelection();
+  rerender();
+}
+
+function extendArcEntity(entity: any, worldX: number, worldY: number): void {
+  if (!rendererState || !currentDxf) return;
+  const arc = arcSpecFromEntity(entity);
+  if (!arc || arc.r < 1e-9) return;
+
+  const lineBounds = entityToLineBoundaries(entity);
+  const clickAngT  = arcAngularClickT(arc, worldX, worldY);
+  const result     = extendArcToBoundaries(arc, lineBounds, clickAngT);
+  if (!result) return;
+
+  const oldSA = entity.startAngle, oldEA = entity.endAngle;
+  const newSA = result.newArc.startAngle, newEA = result.newArc.endAngle;
+
+  pushEditOp('Extend Arc',
+    () => {
+      entity.startAngle = oldSA; entity.endAngle = oldEA;
+      entity._bbox = null;
+      rendererState?.clearSelection(); rerender();
+    },
+    () => {
+      entity.startAngle = newSA; entity.endAngle = newEA;
+      entity._bbox = null;
+      rendererState?.clearSelection(); rerender();
+    }
+  );
+
+  entity.startAngle = newSA;
+  entity.endAngle   = newEA;
   entity._bbox = null;
   rendererState.clearSelection();
   rerender();

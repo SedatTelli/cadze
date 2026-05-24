@@ -1,7 +1,12 @@
 import { Application, Graphics, Container, Text, TextStyle } from 'pixi.js';
+import {
+  bulgeToArc, arcMidAngle, arcBBox, ptToArcDist, angleInArcSpan,
+  nearestOnCircle, nearestT, lineLineIntersect,
+  sampleBSpline, uniformOpenKnots,
+} from './geo';
 
 export type Tool = 'pan' | 'zoom-window' | 'measure' | 'note' | 'angle-measure' | 'area-measure' | 'trim' | 'extend' | 'offset';
-export type SnapType = 'endpoint' | 'midpoint' | 'center' | 'none';
+export type SnapType = 'endpoint' | 'midpoint' | 'center' | 'intersection' | 'perpendicular' | 'nearest' | 'none';
 
 export interface SnapPoint { x: number; y: number; type: SnapType; }
 
@@ -161,10 +166,21 @@ export function computeEntityBBox(entity: any): AABB | null {
       const v = entity.vertices;
       if (!v?.length) return null;
       let mnX=Infinity,mnY=Infinity,mxX=-Infinity,mxY=-Infinity;
-      for (const p of v) {
-        if(p.x<mnX)mnX=p.x; if(p.x>mxX)mxX=p.x;
-        if(p.y<mnY)mnY=p.y; if(p.y>mxY)mxY=p.y;
+      const expand = (x: number, y: number) => {
+        if(x<mnX)mnX=x; if(x>mxX)mxX=x; if(y<mnY)mnY=y; if(y>mxY)mxY=y;
+      };
+      const segCount = entity.closed ? v.length : v.length - 1;
+      for (let i = 0; i < segCount; i++) {
+        const from = v[i], to = v[(i + 1) % v.length];
+        expand(from.x, from.y);
+        const bulge = from.bulge ?? 0;
+        if (Math.abs(bulge) > 1e-9) {
+          const ab = arcBBox(bulgeToArc({ x: from.x, y: from.y }, { x: to.x, y: to.y }, bulge));
+          if(ab.minX<mnX)mnX=ab.minX; if(ab.maxX>mxX)mxX=ab.maxX;
+          if(ab.minY<mnY)mnY=ab.minY; if(ab.maxY>mxY)mxY=ab.maxY;
+        }
       }
+      if (!entity.closed && v.length > 0) expand(v[v.length-1].x, v[v.length-1].y);
       return isFinite(mnX) ? { minX:mnX, minY:mnY, maxX:mxX, maxY:mxY } : null;
     }
     case 'ELLIPSE': {
@@ -500,6 +516,18 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
       } else if (snapPoint.type === 'center') {
         overlay.circle(sx,sy2,6).stroke({ color: 0x00aaff, width: 1.5 });
         overlay.circle(sx,sy2,1.5).fill({ color: 0x00aaff });
+      } else if (snapPoint.type === 'intersection') {
+        // X mark — cyan
+        overlay.moveTo(sx-5,sy2-5).lineTo(sx+5,sy2+5).stroke({ color: 0x00ffff, width: 1.5 });
+        overlay.moveTo(sx+5,sy2-5).lineTo(sx-5,sy2+5).stroke({ color: 0x00ffff, width: 1.5 });
+      } else if (snapPoint.type === 'perpendicular') {
+        // Right-angle symbol — magenta
+        overlay.rect(sx-4,sy2-4,8,8).stroke({ color: 0xff44ff, width: 1.5 });
+        overlay.moveTo(sx,sy2).lineTo(sx,sy2-8).stroke({ color: 0xff44ff, width: 1.5 });
+      } else if (snapPoint.type === 'nearest') {
+        // Diamond — orange
+        overlay.moveTo(sx,sy2-6).lineTo(sx+5,sy2).lineTo(sx,sy2+6).lineTo(sx-5,sy2).closePath()
+               .stroke({ color: 0xff8800, width: 1.5 });
       }
     }
   });
@@ -921,10 +949,22 @@ function drawEntity(g: Graphics, entity: any, color: number, dxf: any, ins: any,
     case 'LWPOLYLINE': case 'POLYLINE': {
       const v = entity.vertices;
       if (!v?.length) break;
-      const first = pt(v[0].x,v[0].y);
-      g.moveTo(first.x,-first.y);
-      for (let i=1;i<v.length;i++) { const p=pt(v[i].x,v[i].y); g.lineTo(p.x,-p.y); }
-      if (entity.closed) g.closePath();
+      const first = pt(v[0].x, v[0].y);
+      g.moveTo(first.x, -first.y);
+      const segCount = entity.closed ? v.length : v.length - 1;
+      const scale = ins?.xScale ?? 1;
+      for (let i = 0; i < segCount; i++) {
+        const from = v[i], to = v[(i + 1) % v.length];
+        const bulge = from.bulge ?? 0;
+        if (Math.abs(bulge) > 1e-9) {
+          const arc = bulgeToArc({ x: from.x, y: from.y }, { x: to.x, y: to.y }, bulge);
+          const cp  = pt(arc.cx, arc.cy);
+          g.arc(cp.x, -cp.y, arc.r * scale, -arc.startAngle, -arc.endAngle, true);
+        } else {
+          const p = pt(to.x, to.y);
+          g.lineTo(p.x, -p.y);
+        }
+      }
       g.stroke({ color, width: w });
       break;
     }
@@ -937,11 +977,25 @@ function drawEntity(g: Graphics, entity: any, color: number, dxf: any, ins: any,
       break;
     }
     case 'SPLINE': {
-      const pts = entity.controlPoints ?? entity.fitPoints;
+      const cps: { x: number; y: number }[] | undefined = entity.controlPoints;
+      const fps: { x: number; y: number }[] | undefined = entity.fitPoints;
+      const pts = cps?.length ? cps : fps;
       if (!pts?.length) break;
-      const first = pt(pts[0].x,pts[0].y);
-      g.moveTo(first.x,-first.y);
-      for (let i=1;i<pts.length;i++) { const p=pt(pts[i].x,pts[i].y); g.lineTo(p.x,-p.y); }
+      const degree: number = entity.degree ?? 3;
+      const knots: number[] | undefined = cps?.length ? entity.knots : undefined;
+      const weights: number[] | null = entity.weights?.length ? entity.weights : null;
+      const kv = (knots && knots.length === cps!.length + degree + 1)
+        ? knots
+        : uniformOpenKnots(pts.length, Math.min(degree, pts.length - 1));
+      const steps = Math.max(pts.length * 8, 64);
+      const sampled = sampleBSpline(Math.min(degree, pts.length - 1), kv, pts, weights, steps);
+      if (!sampled.length) break;
+      const f = pt(sampled[0].x, sampled[0].y);
+      g.moveTo(f.x, -f.y);
+      for (let i = 1; i < sampled.length; i++) {
+        const p = pt(sampled[i].x, sampled[i].y);
+        g.lineTo(p.x, -p.y);
+      }
       g.stroke({ color, width: w });
       break;
     }
@@ -1121,53 +1175,138 @@ function selectInBox(entities: any[], box: AABB, crossing: boolean, visibleLayer
 // ── OSNAP ─────────────────────────────────────────────────────────────────────
 
 export function findSnapPoint(wx: number, wy: number, entities: any[], radius: number, qt?: QuadTree | null): SnapPoint | null {
-  const candidates = qt ? qt.queryPoint(wx, wy, radius * 2) : entities;
+  const candidates: any[] = qt ? qt.queryPoint(wx, wy, radius * 2) : entities;
   let best: SnapPoint | null = null;
   let bestD = radius;
 
   const check = (x: number, y: number, type: SnapType) => {
-    const d = Math.sqrt((x-wx)**2+(y-wy)**2);
-    if (d < bestD) { bestD=d; best={ x, y, type }; }
+    const d = Math.sqrt((x - wx) ** 2 + (y - wy) ** 2);
+    if (d < bestD) { bestD = d; best = { x, y, type }; }
   };
 
+  // ── Primary snaps: endpoint, midpoint, center ────────────────────────────
   for (const e of candidates) {
     switch (e.type) {
       case 'LINE': {
         const v = e.vertices;
         if (v?.length >= 2) {
-          check(v[0].x,v[0].y,'endpoint');
-          check(v[1].x,v[1].y,'endpoint');
-          check((v[0].x+v[1].x)/2,(v[0].y+v[1].y)/2,'midpoint');
+          check(v[0].x, v[0].y, 'endpoint');
+          check(v[1].x, v[1].y, 'endpoint');
+          check((v[0].x + v[1].x) / 2, (v[0].y + v[1].y) / 2, 'midpoint');
         }
         break;
       }
       case 'CIRCLE':
-        if (e.center) check(e.center.x,e.center.y,'center');
+        if (e.center) check(e.center.x, e.center.y, 'center');
         break;
       case 'ARC':
         if (e.center) {
-          check(e.center.x,e.center.y,'center');
-          const sa=e.startAngle??0, ea=e.endAngle??0, r=e.radius??0;
-          check(e.center.x+Math.cos(sa)*r, e.center.y+Math.sin(sa)*r,'endpoint');
-          check(e.center.x+Math.cos(ea)*r, e.center.y+Math.sin(ea)*r,'endpoint');
+          check(e.center.x, e.center.y, 'center');
+          const sa = e.startAngle ?? 0, ea = e.endAngle ?? 0, r = e.radius ?? 0;
+          check(e.center.x + Math.cos(sa) * r, e.center.y + Math.sin(sa) * r, 'endpoint');
+          check(e.center.x + Math.cos(ea) * r, e.center.y + Math.sin(ea) * r, 'endpoint');
+          const ma = arcMidAngle(sa, ea, true);
+          check(e.center.x + Math.cos(ma) * r, e.center.y + Math.sin(ma) * r, 'midpoint');
         }
         break;
       case 'LWPOLYLINE': case 'POLYLINE': {
         const v = e.vertices;
         if (!v?.length) break;
-        for (let i=0;i<v.length;i++) {
-          check(v[i].x,v[i].y,'endpoint');
-          const j=(i+1)%v.length;
-          if (j!==0||e.closed) check((v[i].x+v[j].x)/2,(v[i].y+v[j].y)/2,'midpoint');
+        const n = v.length;
+        const segCount = e.closed ? n : n - 1;
+        for (let i = 0; i < n; i++) check(v[i].x, v[i].y, 'endpoint');
+        for (let i = 0; i < segCount; i++) {
+          const from = v[i], to = v[(i + 1) % n];
+          const bulge = from.bulge ?? 0;
+          if (Math.abs(bulge) > 1e-9) {
+            const arc = bulgeToArc({ x: from.x, y: from.y }, { x: to.x, y: to.y }, bulge);
+            check(arc.cx, arc.cy, 'center');
+            const ma = arcMidAngle(arc.startAngle, arc.endAngle, arc.ccw);
+            check(arc.cx + Math.cos(ma) * arc.r, arc.cy + Math.sin(ma) * arc.r, 'midpoint');
+          } else {
+            check((from.x + to.x) / 2, (from.y + to.y) / 2, 'midpoint');
+          }
         }
         break;
       }
       case 'ELLIPSE':
-        if (e.center) check(e.center.x,e.center.y,'center');
+        if (e.center) check(e.center.x, e.center.y, 'center');
         break;
     }
   }
+
+  // ── Secondary snaps: intersection, perpendicular, nearest ──────────────
+  // Only compute if no primary snap is very close, to avoid slowing down frequent moves.
+  const primaryBestD = bestD;
+  const arr = candidates;
+
+  // Intersection: check each pair of candidates
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = i + 1; j < arr.length; j++) {
+      const segsI = entityToSegs(arr[i]);
+      const segsJ = entityToSegs(arr[j]);
+      for (const si of segsI) {
+        for (const sj of segsJ) {
+          const r = lineLineIntersect(si.p1, si.p2, sj.p1, sj.p2);
+          if (r && r.t >= -1e-6 && r.t <= 1 + 1e-6 && r.u >= -1e-6 && r.u <= 1 + 1e-6)
+            check(r.x, r.y, 'intersection');
+        }
+      }
+    }
+  }
+
+  // Perpendicular and nearest: single entity, lower priority than primary snaps
+  if (bestD >= primaryBestD) { // only if no primary snap yet hit
+    for (const e of candidates) {
+      for (const seg of entityToSegs(e)) {
+        // Perpendicular foot onto segment
+        const t = nearestT({ x: wx, y: wy }, seg.p1, seg.p2);
+        if (t > 1e-6 && t < 1 - 1e-6) { // exclude endpoints (already handled)
+          check(seg.p1.x + t * (seg.p2.x - seg.p1.x), seg.p1.y + t * (seg.p2.y - seg.p1.y), 'perpendicular');
+        }
+      }
+      // Nearest on arc/circle
+      if (e.type === 'CIRCLE' || e.type === 'ARC') {
+        const c = e.center, r = e.radius ?? 0;
+        if (c && r > 0) {
+          const np = nearestOnCircle(wx, wy, c.x, c.y, r);
+          if (e.type === 'ARC') {
+            const ang = Math.atan2(np.y - c.y, np.x - c.x);
+            if (angleInArcSpan(ang, e.startAngle ?? 0, e.endAngle ?? 0, true))
+              check(np.x, np.y, 'nearest');
+          } else {
+            check(np.x, np.y, 'nearest');
+          }
+        }
+      }
+    }
+  }
+
   return best;
+}
+
+/** Extract straight-line segments from an entity for intersection OSNAP. */
+function entityToSegs(e: any): Array<{ p1: { x: number; y: number }; p2: { x: number; y: number } }> {
+  const segs: Array<{ p1: { x: number; y: number }; p2: { x: number; y: number } }> = [];
+  switch (e.type) {
+    case 'LINE': {
+      const v = e.vertices;
+      if (v?.length >= 2) segs.push({ p1: { x: v[0].x, y: v[0].y }, p2: { x: v[1].x, y: v[1].y } });
+      break;
+    }
+    case 'LWPOLYLINE': case 'POLYLINE': {
+      const v = e.vertices;
+      if (!v?.length) break;
+      const n = v.length, segCount = e.closed ? n : n - 1;
+      for (let i = 0; i < segCount; i++) {
+        const from = v[i], to = v[(i + 1) % n];
+        if (!(from.bulge && Math.abs(from.bulge) > 1e-9))
+          segs.push({ p1: { x: from.x, y: from.y }, p2: { x: to.x, y: to.y } });
+      }
+      break;
+    }
+  }
+  return segs;
 }
 
 // ── Hit Test ──────────────────────────────────────────────────────────────────
@@ -1205,11 +1344,15 @@ function hitTestEntity(wx: number, wy: number, e: any, tol: number): boolean {
     case 'LWPOLYLINE': case 'POLYLINE': {
       const v = e.vertices;
       if (!v?.length) return false;
-      for (let i=0;i<v.length-1;i++)
-        if (ptToSegDist(wx,wy,v[i].x,v[i].y,v[i+1].x,v[i+1].y)<tol) return true;
-      if (e.closed && v.length>2) {
-        const last=v[v.length-1];
-        return ptToSegDist(wx,wy,last.x,last.y,v[0].x,v[0].y)<tol;
+      const segCount = e.closed ? v.length : v.length - 1;
+      for (let i = 0; i < segCount; i++) {
+        const from = v[i], to = v[(i + 1) % v.length];
+        const bulge = from.bulge ?? 0;
+        if (Math.abs(bulge) > 1e-9) {
+          if (ptToArcDist(wx, wy, bulgeToArc({ x: from.x, y: from.y }, { x: to.x, y: to.y }, bulge)) < tol) return true;
+        } else {
+          if (ptToSegDist(wx, wy, from.x, from.y, to.x, to.y) < tol) return true;
+        }
       }
       return false;
     }
