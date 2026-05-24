@@ -223,12 +223,16 @@ fn find_converter(app: &tauri::AppHandle, name: &str) -> Option<PathBuf> {
     if let Ok(res) = app.path().resource_dir() {
         let p = res.join("bin").join(name);
         if p.exists() { return Some(p); }
+        let p2 = res.join(name);
+        if p2.exists() { return Some(p2); }
     }
-    // 2. bin/ folder next to the .exe (portable mode)
+    // 2. Next to the exe — flat (zip root) or in bin/ subfolder
     if let Ok(exe) = std::env::current_exe() {
         if let Some(dir) = exe.parent() {
-            let p = dir.join("bin").join(name);
+            let p = dir.join(name);           // flat: cadze.exe + dwg2dxf.exe in same dir
             if p.exists() { return Some(p); }
+            let p2 = dir.join("bin").join(name);
+            if p2.exists() { return Some(p2); }
         }
     }
     // 3. Dev: relative to src-tauri (cargo run from workspace)

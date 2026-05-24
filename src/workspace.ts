@@ -322,6 +322,9 @@ export function executeCmd(cmd: string): void {
     case 'open':
       document.dispatchEvent(new Event('cadze:open'));
       break;
+    case 'new':
+      newDrawing();
+      break;
     case 'close-file':
       closeFile();
       break;
@@ -529,6 +532,7 @@ export function setupKeyboardShortcuts(): void {
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
     if (e.ctrlKey && e.key === 'p') { e.preventDefault(); window.print(); return; }
+    if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); newDrawing(); return; }
     if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); undoAction(); return; }
     if (e.ctrlKey && (e.key === 'y' || e.key === 'Y')) { e.preventDefault(); redoAction(); return; }
     if (e.ctrlKey && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); selectAll(); return; }
@@ -1389,6 +1393,21 @@ function selectAll(): void {
     (e: any) => layerVisibility.has(e.layer ?? '0')
   );
   rendererState.setSelectedSet(new Set(visible));
+}
+
+function newDrawing(): void {
+  const blankDxf = {
+    header: {},
+    tables: {
+      layer: {
+        layers: { '0': { name: '0', color: 7, colorIndex: 7, lineType: 'CONTINUOUS', lineWeight: 0, frozen: false, visible: true } }
+      }
+    },
+    blocks: {},
+    entities: [] as any[],
+  };
+  const loaded: LoadedFile = { name: 'Untitled.dxf', type: 'dxf', dxf: blankDxf };
+  showWorkspace(loaded);
 }
 
 function closeFile(): void {

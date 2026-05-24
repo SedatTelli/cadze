@@ -104,6 +104,7 @@ function applyLabels(): void {
 
   // Menubar — command items (data-cmd → menu.* key)
   const menuCmdKey: Record<string, string> = {
+    'new':              'menu.new',
     'open':             'menu.open',
     'export-png':       'menu.export_png',
     'export-pdf':       'menu.export_pdf',
