@@ -67,8 +67,10 @@
             <div class="menu-cmd" data-cmd="tool-copy">Copy <kbd>CP</kbd></div>
             <div class="menu-cmd" data-cmd="tool-rotate">Rotate <kbd>RO</kbd></div>
             <div class="menu-cmd" data-cmd="tool-scale">Scale <kbd>SC</kbd></div>
+            <div class="menu-cmd" data-cmd="tool-mirror">Mirror <kbd>MI</kbd></div>
             <div class="menu-sep"></div>
             <div class="menu-cmd" data-cmd="toggle-osnap">Toggle OSNAP <kbd>F3</kbd></div>
+            <div class="menu-cmd" data-cmd="toggle-ortho">Toggle ORTHO <kbd>F8</kbd></div>
             <div class="menu-sep"></div>
             <div class="menu-cmd" data-cmd="layers-all">Show All Layers</div>
             <div class="menu-cmd" data-cmd="layers-none">Hide All Layers</div>
@@ -269,6 +271,14 @@
                 <line x1="10" y1="8" x2="8" y2="10"/>
               </svg>
             </button>
+            <!-- Mirror -->
+            <button class="tool-btn" id="tool-mirror" title="Mirror (MI)" data-tip="Mirror  MI">
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="9" y1="1" x2="9" y2="17" stroke-dasharray="2,2"/>
+                <polyline points="2,5 6,9 2,13"/>
+                <polyline points="16,5 12,9 16,13"/>
+              </svg>
+            </button>
             <div class="tool-sep"></div>
             <!-- Fit View -->
             <button class="tool-btn" id="tool-fit" title="Fit View (Home)" data-tip="Fit View  Home">
@@ -340,6 +350,7 @@
           <div class="status-zoom" id="status-zoom">1:<span>1</span></div>
           <div class="status-divider"></div>
           <button class="osnap-btn active" id="osnap-indicator" title="OSNAP ON (F3 to toggle)">OSNAP</button>
+          <button class="osnap-btn" id="ortho-indicator" title="ORTHO OFF (F8 to toggle)">ORTHO</button>
           <div class="status-divider"></div>
           <select class="unit-select" id="unit-select" title="Drawing Units">
             <option value="unit">unit</option>

@@ -87,6 +87,7 @@ function applyLabels(): void {
   document.getElementById('tool-copy')?.setAttribute('data-tip', t('toolbar.copy'));
   document.getElementById('tool-rotate')?.setAttribute('data-tip', t('toolbar.rotate'));
   document.getElementById('tool-scale')?.setAttribute('data-tip', t('toolbar.scale'));
+  document.getElementById('tool-mirror')?.setAttribute('data-tip', t('toolbar.mirror'));
   document.getElementById('tool-fit')?.setAttribute('data-tip', t('toolbar.fit'));
 
   // Command input placeholder
@@ -127,7 +128,9 @@ function applyLabels(): void {
     'tool-copy':        'menu.tool_copy',
     'tool-rotate':      'menu.tool_rotate',
     'tool-scale':       'menu.tool_scale',
+    'tool-mirror':      'menu.tool_mirror',
     'toggle-osnap':     'menu.toggle_osnap',
+    'toggle-ortho':     'menu.toggle_ortho',
     'layers-all':       'menu.layers_all',
     'layers-none':      'menu.layers_none',
     'undo':             'menu.undo',

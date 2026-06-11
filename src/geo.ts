@@ -607,3 +607,66 @@ export function transformEntity(entity: any, m: Mat3): any {
 
   return e;
 }
+
+/** Mirror a DXF entity across the line from (x1,y1) to (x2,y2). */
+export function mirrorEntityAcrossLine(entity: any, x1: number, y1: number, x2: number, y2: number): any {
+  const dx = x2 - x1, dy = y2 - y1;
+  const len2 = dx*dx + dy*dy;
+  if (len2 < 1e-10) return JSON.parse(JSON.stringify(entity));
+  const cos2 = (dx*dx - dy*dy) / len2;
+  const sin2 = 2*dx*dy / len2;
+
+  const e = JSON.parse(JSON.stringify(entity));
+  e._bbox = null;
+
+  const mirrorPt = (v: any) => {
+    const rx = cos2*(v.x - x1) + sin2*(v.y - y1) + x1;
+    const ry = sin2*(v.x - x1) - cos2*(v.y - y1) + y1;
+    v.x = rx; v.y = ry;
+  };
+  const mirrorAngle = Math.atan2(dy, dx);
+  const reflDeg = (a: number) => (2 * mirrorAngle - a * Math.PI / 180) * 180 / Math.PI;
+
+  switch (e.type) {
+    case 'LINE':
+      if (e.vertices?.length >= 2) { mirrorPt(e.vertices[0]); mirrorPt(e.vertices[1]); }
+      break;
+    case 'CIRCLE':
+      if (e.center) mirrorPt(e.center);
+      break;
+    case 'ARC': {
+      if (e.center) mirrorPt(e.center);
+      const sa = e.startAngle ?? 0, ea = e.endAngle ?? 0;
+      e.startAngle = reflDeg(ea);
+      e.endAngle   = reflDeg(sa);
+      break;
+    }
+    case 'LWPOLYLINE':
+    case 'POLYLINE':
+      (e.vertices ?? []).forEach((v: any) => mirrorPt(v));
+      break;
+    case 'TEXT':
+    case 'MTEXT':
+      if (e.insertionPoint) mirrorPt(e.insertionPoint);
+      if (e.position) mirrorPt(e.position);
+      if (e.rotation !== undefined) e.rotation = reflDeg(e.rotation);
+      break;
+    case 'INSERT':
+      if (e.position) mirrorPt(e.position);
+      if (e.rotation !== undefined) e.rotation = reflDeg(e.rotation);
+      break;
+    case 'SPLINE':
+      (e.controlPoints ?? []).forEach((v: any) => mirrorPt(v));
+      (e.fitPoints ?? []).forEach((v: any) => mirrorPt(v));
+      break;
+    case 'ELLIPSE':
+      if (e.center) mirrorPt(e.center);
+      if (e.majorAxisEndPoint) {
+        const vx = e.majorAxisEndPoint.x ?? 0, vy = e.majorAxisEndPoint.y ?? 0;
+        e.majorAxisEndPoint.x = cos2 * vx + sin2 * vy;
+        e.majorAxisEndPoint.y = sin2 * vx - cos2 * vy;
+      }
+      break;
+  }
+  return e;
+}

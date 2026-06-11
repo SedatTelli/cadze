@@ -1,6 +1,12 @@
 {
-  "app": { "version": "v0.1-beta" },
-  "titlebar": { "settings": "Einstellungen", "minimize": "Minimieren", "close": "Schließen" },
+  "app": {
+    "version": "v0.1-beta"
+  },
+  "titlebar": {
+    "settings": "Einstellungen",
+    "minimize": "Minimieren",
+    "close": "Schließen"
+  },
   "dropzone": {
     "title": "CAD-Datei hier ablegen",
     "formats": "DWG · DXF",
@@ -8,7 +14,10 @@
     "browse": "Datei auswählen  Ctrl+O",
     "recent": "Zuletzt geöffnet"
   },
-  "footer": { "local": "lokal verarbeitet", "opensource": "open-source" },
+  "footer": {
+    "local": "lokal verarbeitet",
+    "opensource": "open-source"
+  },
   "infobar": {
     "dwg_partial": "DWG {{version}} erkannt — Open-Source-Engine verwendet, einige Elemente fehlen möglicherweise.",
     "report": "Problem melden",
@@ -34,7 +43,8 @@
     "scale": "Skalieren  SC",
     "fit": "Alles anzeigen  Home",
     "zoom_in": "Vergrößern",
-    "zoom_out": "Verkleinern"
+    "zoom_out": "Verkleinern",
+    "mirror": "Spiegeln  MI"
   },
   "menu": {
     "file": "Datei",
@@ -72,7 +82,9 @@
     "user_manual": "Benutzerhandbuch",
     "report": "Problem melden",
     "about": "Über Cadze",
-    "settings": "Einstellungen…"
+    "settings": "Einstellungen…",
+    "tool_mirror": "Spiegeln",
+    "toggle_ortho": "ORTHO umschalten"
   },
   "ctx": {
     "fit_view": "Alles anzeigen",
@@ -88,19 +100,57 @@
   "layers": "Ebenen",
   "properties": "Eigenschaften",
   "no_selection": "Kein Objekt ausgewählt",
-  "props": { "type": "Typ", "layer": "Ebene", "length": "Länge", "radius": "Radius", "color": "Farbe", "angle": "Winkel", "area": "Fläche", "perimeter": "Umfang", "selected": "Ausgewählt", "delete_hint": "Del — ausgewählte löschen" },
-  "statusbar": { "coords": "X: {{x}}  Y: {{y}}", "zoom": "1:{{z}}" },
-  "cmd": { "hint": "Befehl eingeben...", "zoom_all": "ZOOM: Alles", "unknown": "Unbekannter Befehl: {{cmd}}" },
-  "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
+  "props": {
+    "type": "Typ",
+    "layer": "Ebene",
+    "length": "Länge",
+    "radius": "Radius",
+    "color": "Farbe",
+    "angle": "Winkel",
+    "area": "Fläche",
+    "perimeter": "Umfang",
+    "selected": "Ausgewählt",
+    "delete_hint": "Del — ausgewählte löschen"
+  },
+  "statusbar": {
+    "coords": "X: {{x}}  Y: {{y}}",
+    "zoom": "1:{{z}}"
+  },
+  "cmd": {
+    "hint": "Befehl eingeben...",
+    "zoom_all": "ZOOM: Alles",
+    "unknown": "Unbekannter Befehl: {{cmd}}"
+  },
+  "export": {
+    "pdf": "PDF",
+    "png": "PNG",
+    "dxf": "DXF"
+  },
   "pro": "Cadze Pro — Demnächst",
-  "settings": { "title": "Einstellungen", "language": "Sprache", "keyboard": "Tastaturkürzel", "open_zoom": "Standard-Öffnungszoom" },
-  "langs": { "en": "English", "tr": "Türkçe", "de": "Deutsch", "zh": "中文", "ja": "日本語" },
-  "loading": { "parsing": "Datei wird geparst...", "rendering": "{{n}} Objekte werden gerendert..." },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "keyboard": "Tastaturkürzel",
+    "open_zoom": "Standard-Öffnungszoom"
+  },
+  "langs": {
+    "en": "English",
+    "tr": "Türkçe",
+    "de": "Deutsch",
+    "zh": "中文",
+    "ja": "日本語"
+  },
+  "loading": {
+    "parsing": "Datei wird geparst...",
+    "rendering": "{{n}} Objekte werden gerendert..."
+  },
   "time": {
     "just_now": "gerade eben",
     "minutes_ago": "vor {{m}} Min.",
     "hours_ago": "vor {{h}} Std.",
     "days_ago": "vor {{d}} Tagen"
   },
-  "note": { "placeholder": "Notiz eingeben… (Enter speichern, Esc abbrechen)" }
+  "note": {
+    "placeholder": "Notiz eingeben… (Enter speichern, Esc abbrechen)"
+  }
 }

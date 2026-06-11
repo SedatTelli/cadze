@@ -11,7 +11,8 @@ import {
   arcLineAngularTs, arcArcAngularTs,
   trimArcByAngularTs, extendArcToBoundaries,
   circleLineIntersectTs, angleInArcSpan,
-  transformEntity, matTranslate, matAroundPivot, matRotate, matScale as geoMatScale,
+  transformEntity, mirrorEntityAcrossLine,
+  matTranslate, matAroundPivot, matRotate, matScale as geoMatScale,
 } from './geo';
 import type { LoadedFile } from './dxf-loader';
 
@@ -28,6 +29,10 @@ export function setDefaultOpenZoom(value: number): void {
   localStorage.setItem('cadze_open_zoom', String(value));
 }
 export function getDefaultOpenZoom(): number { return defaultOpenZoom; }
+
+let lastCommand = '';
+let orthoEnabled = false;
+let prevViewport: { x: number; y: number; scale: number } | null = null;
 
 // Unit system
 type UnitCode = 'unit' | 'mm' | 'cm' | 'm' | 'inch' | 'ft';
@@ -290,6 +295,7 @@ function setupRendererCallbacks(state: RendererState): void {
   state.onTransformAction = (entities, dx, dy, copy) => moveEntities(entities, dx, dy, copy);
   state.onRotateAction    = (entities, px, py, angle) => rotateEntities(entities, px, py, angle);
   state.onScaleAction     = (entities, px, py, factor) => scaleEntities(entities, px, py, factor);
+  state.onMirrorAction    = (entities, x1, y1, x2, y2) => mirrorEntities(entities, x1, y1, x2, y2);
   state.onMeasureResult = (dist, dx, dy) => {
     const bar = document.getElementById('status-measure');
     const val = document.getElementById('status-measure-val');
@@ -354,12 +360,13 @@ export function executeCmd(cmd: string): void {
       exportDxf();
       break;
     case 'zoom-in':
-      rendererState?.zoomBy(1.4);
+      saveViewport(); rendererState?.zoomBy(1.4);
       break;
     case 'zoom-out':
-      rendererState?.zoomBy(1 / 1.4);
+      saveViewport(); rendererState?.zoomBy(1 / 1.4);
       break;
     case 'fit-view':
+      saveViewport();
       if (rendererState && currentDxf) renderDxf(rendererState, currentDxf, layerVisibility);
       break;
     case 'toggle-bg':
@@ -419,8 +426,14 @@ export function executeCmd(cmd: string): void {
     case 'tool-scale':
       setActiveTool('scale');
       break;
+    case 'tool-mirror':
+      setActiveTool('mirror');
+      break;
     case 'toggle-osnap':
       toggleOsnap();
+      break;
+    case 'toggle-ortho':
+      toggleOrtho();
       break;
     case 'undo':
       undoAction();
@@ -524,6 +537,7 @@ export function setupToolbar(): void {
   document.getElementById('tool-copy')?.addEventListener('click', () => setActiveTool('copy'));
   document.getElementById('tool-rotate')?.addEventListener('click', () => setActiveTool('rotate'));
   document.getElementById('tool-scale')?.addEventListener('click', () => setActiveTool('scale'));
+  document.getElementById('tool-mirror')?.addEventListener('click', () => setActiveTool('mirror'));
 }
 
 function setActiveTool(name: Tool): void {
@@ -541,14 +555,20 @@ export function setupKeyboardShortcuts(): void {
     const tag = (e.target as HTMLElement).tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
+    // ── Ctrl combos ───────────────────────────────────────────────────────────
     if (e.ctrlKey && e.key === 'p') { e.preventDefault(); window.print(); return; }
     if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); newDrawing(); return; }
     if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); undoAction(); return; }
     if (e.ctrlKey && (e.key === 'y' || e.key === 'Y')) { e.preventDefault(); redoAction(); return; }
     if (e.ctrlKey && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); selectAll(); return; }
+    if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); exportDxf(); return; }
+    if (e.ctrlKey && (e.key === 'w' || e.key === 'W')) { e.preventDefault(); if (activeTabId) closeTab(activeTabId); return; }
+    if (e.ctrlKey && e.key === 'F4') { e.preventDefault(); if (activeTabId) closeTab(activeTabId); return; }
+    if (e.ctrlKey && e.shiftKey && e.key === 'Tab') { e.preventDefault(); switchTab(-1); return; }
+    if (e.ctrlKey && e.key === 'Tab') { e.preventDefault(); switchTab(1); return; }
 
     switch (e.key) {
-      case 'v': case 'V': case 'p': case 'P':
+      case 'v': case 'V':
         if (!e.ctrlKey) { e.preventDefault(); setActiveTool('pan'); } break;
       case 'z': case 'Z':
         if (!e.ctrlKey) { e.preventDefault(); setActiveTool('zoom-window'); } break;
@@ -560,14 +580,27 @@ export function setupKeyboardShortcuts(): void {
         if (!e.ctrlKey) { e.preventDefault(); setActiveTool('area-measure'); } break;
       case 'n': case 'N':
         if (!e.ctrlKey) { e.preventDefault(); setActiveTool('note'); } break;
+      case 'e': case 'E':
+        if (!e.ctrlKey) {
+          e.preventDefault();
+          if (rendererState && rendererState.getSelectedSet().size > 0) deleteSelected();
+        } break;
+      case ' ':
+        e.preventDefault();
+        if (lastCommand) handleCommand(lastCommand);
+        break;
+      case 'F2':
+        e.preventDefault(); document.getElementById('cmd-input')?.focus(); break;
       case 'F3':
         e.preventDefault(); toggleOsnap(); break;
+      case 'F8':
+        e.preventDefault(); toggleOrtho(); break;
       case 'Home':
         e.preventDefault(); executeCmd('fit-view'); break;
       case '+': case '=':
-        if (!e.ctrlKey) { e.preventDefault(); rendererState?.zoomBy(1.4); } break;
+        if (!e.ctrlKey) { e.preventDefault(); saveViewport(); rendererState?.zoomBy(1.4); } break;
       case '-':
-        if (!e.ctrlKey) { e.preventDefault(); rendererState?.zoomBy(1 / 1.4); } break;
+        if (!e.ctrlKey) { e.preventDefault(); saveViewport(); rendererState?.zoomBy(1 / 1.4); } break;
       case 'b': case 'B':
         if (!e.ctrlKey) { e.preventDefault(); toggleBackground(); } break;
       case 'F1':
@@ -615,6 +648,8 @@ export function setupCommandLine(): void {
 }
 
 function handleCommand(raw: string): void {
+  lastCommand = raw;
+
   // Handle unit switch: e.g. "MM", "CM", "M", "INCH", "FT", "UNIT"
   const unitCodes: Record<string, UnitCode> = { MM:'mm', CM:'cm', M:'m', INCH:'inch', FT:'ft', UNIT:'unit', IN:'inch' };
   if (unitCodes[raw]) { setUnit(unitCodes[raw]); return; }
@@ -646,10 +681,6 @@ function handleCommand(raw: string): void {
       toggleBackground(); break;
     case 'OSNAP': case 'OS':
       toggleOsnap(); break;
-    case 'U': case 'UNDO':
-      undoAction(); break;
-    case 'REDO':
-      redoAction(); break;
     case 'LAON': case 'LAALL':
       executeCmd('layers-all'); break;
     case 'LAOFF': case 'LANONE':
@@ -668,8 +699,44 @@ function handleCommand(raw: string): void {
       setActiveTool('copy'); break;
     case 'ROTATE': case 'RO':
       setActiveTool('rotate'); break;
-    case 'SC':
+    case 'SC': case 'SCALE':
       setActiveTool('scale'); break;
+    case 'MI': case 'MIRROR':
+      setActiveTool('mirror'); break;
+    case 'E': case 'ERASE':
+      if (rendererState && rendererState.getSelectedSet().size > 0) deleteSelected(); break;
+    case 'U': case 'UNDO':
+      undoAction(); break;
+    case 'REDO':
+      redoAction(); break;
+    case 'ZP': case 'ZOOMPREV':
+      if (prevViewport && rendererState) {
+        rendererState.scene.x = prevViewport.x;
+        rendererState.scene.y = prevViewport.y;
+        rendererState.scene.scale.set(prevViewport.scale, prevViewport.scale);
+        rendererState.onZoomUpdate(Math.round(1 / prevViewport.scale * 100));
+        prevViewport = null;
+      } break;
+    case 'ZF': case 'ZFIT': case 'ZE':
+      executeCmd('fit-view'); break;
+    case 'ZW':
+      setActiveTool('zoom-window'); break;
+    case 'ORTHO': case 'OR':
+      toggleOrtho(); break;
+    case 'LA': case 'LAYER':
+      document.getElementById('layer-panel')?.scrollIntoView(); break;
+    case 'OP': case 'OPTIONS':
+      document.dispatchEvent(new Event('cadze:open-settings')); break;
+    case 'UN': case 'UNITS':
+      document.dispatchEvent(new Event('cadze:open-settings')); break;
+    case 'HELP': case '?':
+      showHelp(); break;
+    case 'NEW':
+      newDrawing(); break;
+    case 'OPEN':
+      executeCmd('open'); break;
+    case 'CLOSE':
+      if (activeTabId) closeTab(activeTabId); break;
     default:
       // OFFSET with distance: e.g. "OFFSET 50"
       if (raw.startsWith('OFFSET ') || raw.startsWith('O ') || raw.startsWith('OF ')) {
@@ -694,6 +761,56 @@ function toggleOsnap(): void {
   rendererState?.setOsnap(on);
   const el = document.getElementById('osnap-indicator');
   if (el) { el.classList.toggle('active', on); el.title = `OSNAP ${on ? 'ON' : 'OFF'}`; }
+}
+
+function toggleOrtho(): void {
+  orthoEnabled = !orthoEnabled;
+  rendererState?.setOrtho(orthoEnabled);
+  const el = document.getElementById('ortho-indicator');
+  if (el) { el.classList.toggle('active', orthoEnabled); el.title = `ORTHO ${orthoEnabled ? 'ON' : 'OFF'}`; }
+}
+
+function saveViewport(): void {
+  if (!rendererState) return;
+  prevViewport = { x: rendererState.scene.x, y: rendererState.scene.y, scale: rendererState.scene.scale.x };
+}
+
+function switchTab(dir: 1 | -1): void {
+  if (tabs.length < 2 || !activeTabId) return;
+  const idx = tabs.findIndex(t => t.id === activeTabId);
+  if (idx === -1) return;
+  const next = tabs[(idx + dir + tabs.length) % tabs.length];
+  activateTab(next.id);
+}
+
+function mirrorEntities(entities: any[], x1: number, y1: number, x2: number, y2: number): void {
+  if (!rendererState || !currentDxf) return;
+  const originals = entities.map(e => JSON.parse(JSON.stringify(e)));
+  const mirrored  = entities.map(e => mirrorEntityAcrossLine(e, x1, y1, x2, y2));
+  for (let i = 0; i < entities.length; i++) {
+    const idx = currentDxf.entities.indexOf(entities[i]);
+    if (idx !== -1) currentDxf.entities.splice(idx, 1, mirrored[i]);
+  }
+  rendererState.clearSelection();
+  rerender();
+  pushEditOp('Mirror',
+    () => {
+      if (!currentDxf) return;
+      for (let i = 0; i < mirrored.length; i++) {
+        const idx = currentDxf.entities.indexOf(mirrored[i]);
+        if (idx !== -1) currentDxf.entities.splice(idx, 1, originals[i]);
+      }
+      rendererState?.clearSelection(); rerender();
+    },
+    () => {
+      if (!currentDxf) return;
+      for (let i = 0; i < originals.length; i++) {
+        const idx = currentDxf.entities.indexOf(originals[i]);
+        if (idx !== -1) currentDxf.entities.splice(idx, 1, mirrored[i]);
+      }
+      rendererState?.clearSelection(); rerender();
+    }
+  );
 }
 
 // ── Export ─────────────────────────────────────────────────────────────────────

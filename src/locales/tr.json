@@ -1,6 +1,12 @@
 {
-  "app": { "version": "v0.1-beta" },
-  "titlebar": { "settings": "Ayarlar", "minimize": "Küçült", "close": "Kapat" },
+  "app": {
+    "version": "v0.1-beta"
+  },
+  "titlebar": {
+    "settings": "Ayarlar",
+    "minimize": "Küçült",
+    "close": "Kapat"
+  },
   "dropzone": {
     "title": "CAD Dosyasını Buraya Bırak",
     "formats": "DWG · DXF",
@@ -8,7 +14,10 @@
     "browse": "Dosya Seç  Ctrl+O",
     "recent": "Son Açılanlar"
   },
-  "footer": { "local": "yerel işlem", "opensource": "açık kaynak" },
+  "footer": {
+    "local": "yerel işlem",
+    "opensource": "açık kaynak"
+  },
   "infobar": {
     "dwg_partial": "DWG {{version}} algılandı — açık kaynaklı motor kullanılıyor, bazı gelişmiş elementler eksik görünebilir.",
     "report": "Sorun Bildir",
@@ -34,7 +43,8 @@
     "scale": "Ölçekle  SC",
     "fit": "Tümünü Göster  Home",
     "zoom_in": "Yakınlaştır",
-    "zoom_out": "Uzaklaştır"
+    "zoom_out": "Uzaklaştır",
+    "mirror": "Ayna  MI"
   },
   "menu": {
     "file": "Dosya",
@@ -72,7 +82,9 @@
     "user_manual": "Kullanım Kılavuzu",
     "report": "Sorun Bildir",
     "about": "Cadze Hakkında",
-    "settings": "Ayarlar…"
+    "settings": "Ayarlar…",
+    "tool_mirror": "Ayna",
+    "toggle_ortho": "ORTHO Aç/Kapat"
   },
   "ctx": {
     "fit_view": "Tümünü Göster",
@@ -88,14 +100,32 @@
   "layers": "Katmanlar",
   "properties": "Özellikler",
   "no_selection": "Nesne seçilmedi",
-  "props": { "type": "Tür", "layer": "Katman", "length": "Uzunluk", "radius": "Yarıçap", "color": "Renk", "angle": "Açı", "area": "Alan", "perimeter": "Çevre", "selected": "Seçili", "delete_hint": "Del — seçileni sil" },
-  "statusbar": { "coords": "X: {{x}}  Y: {{y}}", "zoom": "1:{{z}}" },
+  "props": {
+    "type": "Tür",
+    "layer": "Katman",
+    "length": "Uzunluk",
+    "radius": "Yarıçap",
+    "color": "Renk",
+    "angle": "Açı",
+    "area": "Alan",
+    "perimeter": "Çevre",
+    "selected": "Seçili",
+    "delete_hint": "Del — seçileni sil"
+  },
+  "statusbar": {
+    "coords": "X: {{x}}  Y: {{y}}",
+    "zoom": "1:{{z}}"
+  },
   "cmd": {
     "hint": "Komut yazın...",
     "zoom_all": "ZOOM: Tümünü Göster",
     "unknown": "Bilinmeyen komut: {{cmd}}"
   },
-  "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
+  "export": {
+    "pdf": "PDF",
+    "png": "PNG",
+    "dxf": "DXF"
+  },
   "pro": "Cadze Pro — Çok Yakında",
   "settings": {
     "title": "Ayarlar",
@@ -110,12 +140,17 @@
     "zh": "中文",
     "ja": "日本語"
   },
-  "loading": { "parsing": "Dosya okunuyor...", "rendering": "{{n}} nesne çiziliyor..." },
+  "loading": {
+    "parsing": "Dosya okunuyor...",
+    "rendering": "{{n}} nesne çiziliyor..."
+  },
   "time": {
     "just_now": "az önce",
     "minutes_ago": "{{m}} dk önce",
     "hours_ago": "{{h}} saat önce",
     "days_ago": "{{d}} gün önce"
   },
-  "note": { "placeholder": "Notunuzu yazın… (Enter kaydet, Esc iptal)" }
+  "note": {
+    "placeholder": "Notunuzu yazın… (Enter kaydet, Esc iptal)"
+  }
 }

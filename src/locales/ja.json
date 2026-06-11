@@ -1,6 +1,12 @@
 {
-  "app": { "version": "v0.1-beta" },
-  "titlebar": { "settings": "設定", "minimize": "最小化", "close": "閉じる" },
+  "app": {
+    "version": "v0.1-beta"
+  },
+  "titlebar": {
+    "settings": "設定",
+    "minimize": "最小化",
+    "close": "閉じる"
+  },
   "dropzone": {
     "title": "CADファイルをここにドロップ",
     "formats": "DWG · DXF",
@@ -8,7 +14,10 @@
     "browse": "ファイルを選択  Ctrl+O",
     "recent": "最近のファイル"
   },
-  "footer": { "local": "ローカル処理", "opensource": "オープンソース" },
+  "footer": {
+    "local": "ローカル処理",
+    "opensource": "オープンソース"
+  },
   "infobar": {
     "dwg_partial": "DWG {{version}} を検出 — オープンソースエンジン使用中、一部の要素が欠ける場合があります。",
     "report": "問題を報告",
@@ -34,7 +43,8 @@
     "scale": "スケール  SC",
     "fit": "全体表示  Home",
     "zoom_in": "拡大",
-    "zoom_out": "縮小"
+    "zoom_out": "縮小",
+    "mirror": "ミラー  MI"
   },
   "menu": {
     "file": "ファイル",
@@ -72,7 +82,9 @@
     "user_manual": "ユーザーマニュアル",
     "report": "問題を報告",
     "about": "Cadze について",
-    "settings": "設定…"
+    "settings": "設定…",
+    "tool_mirror": "ミラー",
+    "toggle_ortho": "直交切替"
   },
   "ctx": {
     "fit_view": "全体表示",
@@ -88,19 +100,57 @@
   "layers": "レイヤー",
   "properties": "プロパティ",
   "no_selection": "オブジェクト未選択",
-  "props": { "type": "種類", "layer": "レイヤー", "length": "長さ", "radius": "半径", "color": "色", "angle": "角度", "area": "面積", "perimeter": "周長", "selected": "選択済み", "delete_hint": "Del — 選択を削除" },
-  "statusbar": { "coords": "X: {{x}}  Y: {{y}}", "zoom": "1:{{z}}" },
-  "cmd": { "hint": "コマンドを入力...", "zoom_all": "ZOOM: 全体", "unknown": "不明なコマンド: {{cmd}}" },
-  "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
+  "props": {
+    "type": "種類",
+    "layer": "レイヤー",
+    "length": "長さ",
+    "radius": "半径",
+    "color": "色",
+    "angle": "角度",
+    "area": "面積",
+    "perimeter": "周長",
+    "selected": "選択済み",
+    "delete_hint": "Del — 選択を削除"
+  },
+  "statusbar": {
+    "coords": "X: {{x}}  Y: {{y}}",
+    "zoom": "1:{{z}}"
+  },
+  "cmd": {
+    "hint": "コマンドを入力...",
+    "zoom_all": "ZOOM: 全体",
+    "unknown": "不明なコマンド: {{cmd}}"
+  },
+  "export": {
+    "pdf": "PDF",
+    "png": "PNG",
+    "dxf": "DXF"
+  },
   "pro": "Cadze Pro — 近日公開",
-  "settings": { "title": "設定", "language": "言語", "keyboard": "キーボードショートカット", "open_zoom": "デフォルト表示倍率" },
-  "langs": { "en": "English", "tr": "Türkçe", "de": "Deutsch", "zh": "中文", "ja": "日本語" },
-  "loading": { "parsing": "ファイルを解析中...", "rendering": "{{n}} 個のオブジェクトをレンダリング中..." },
+  "settings": {
+    "title": "設定",
+    "language": "言語",
+    "keyboard": "キーボードショートカット",
+    "open_zoom": "デフォルト表示倍率"
+  },
+  "langs": {
+    "en": "English",
+    "tr": "Türkçe",
+    "de": "Deutsch",
+    "zh": "中文",
+    "ja": "日本語"
+  },
+  "loading": {
+    "parsing": "ファイルを解析中...",
+    "rendering": "{{n}} 個のオブジェクトをレンダリング中..."
+  },
   "time": {
     "just_now": "たった今",
     "minutes_ago": "{{m}} 分前",
     "hours_ago": "{{h}} 時間前",
     "days_ago": "{{d}} 日前"
   },
-  "note": { "placeholder": "ノートを入力… (Enter で保存、Esc でキャンセル)" }
+  "note": {
+    "placeholder": "ノートを入力… (Enter で保存、Esc でキャンセル)"
+  }
 }

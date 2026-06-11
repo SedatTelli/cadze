@@ -3,10 +3,11 @@ import {
   bulgeToArc, arcMidAngle, arcBBox, ptToArcDist, angleInArcSpan,
   nearestOnCircle, nearestT, lineLineIntersect,
   sampleBSpline, uniformOpenKnots,
-  transformEntity, matTranslate, matRotate, matAroundPivot, matScale as geoMatScale,
+  transformEntity, mirrorEntityAcrossLine,
+  matTranslate, matRotate, matAroundPivot, matScale as geoMatScale,
 } from './geo';
 
-export type Tool = 'pan' | 'zoom-window' | 'measure' | 'note' | 'angle-measure' | 'area-measure' | 'trim' | 'extend' | 'offset' | 'move' | 'copy' | 'rotate' | 'scale';
+export type Tool = 'pan' | 'zoom-window' | 'measure' | 'note' | 'angle-measure' | 'area-measure' | 'trim' | 'extend' | 'offset' | 'move' | 'copy' | 'rotate' | 'scale' | 'mirror';
 export type SnapType = 'endpoint' | 'midpoint' | 'center' | 'intersection' | 'perpendicular' | 'nearest' | 'none';
 
 export interface SnapPoint { x: number; y: number; type: SnapType; }
@@ -36,10 +37,12 @@ export interface RendererState {
   onAreaResult: (area: number, perimeter: number) => void;
   onFps: (fps: number) => void;
   onSelectionChange: (entities: any[]) => void;
+  setOrtho: (on: boolean) => void;
   onToolAction?: (tool: Tool, entity: any, worldX: number, worldY: number) => void;
   onTransformAction?: (entities: any[], dx: number, dy: number, copy: boolean) => void;
   onRotateAction?: (entities: any[], pivotX: number, pivotY: number, angle: number) => void;
   onScaleAction?: (entities: any[], pivotX: number, pivotY: number, factor: number) => void;
+  onMirrorAction?: (entities: any[], x1: number, y1: number, x2: number, y2: number) => void;
 }
 
 export interface AABB {
@@ -330,6 +333,9 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
   let currentTool: Tool = 'pan';
   let osnapEnabled = true;
 
+  let orthoEnabled = false;
+  let mirrorPt1: { wx: number; wy: number } | null = null;
+
   let isPanning   = false;
   let panStarted  = false;
   let lastPan     = { x: 0, y: 0 };
@@ -384,7 +390,7 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
         measurePt1 = null; zoomStart = null; zoomRect = null;
         selBoxStart = null; selBoxRect = null;
         anglePts = []; areaPts = [];
-        transformPick = null;
+        transformPick = null; mirrorPt1 = null;
       } else {
         app.canvas.style.cursor = 'crosshair';
         if (tool !== 'measure')       measurePt1 = null;
@@ -392,8 +398,10 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
         if (tool !== 'area-measure')  areaPts = [];
         if (tool !== 'move' && tool !== 'copy' && tool !== 'rotate' && tool !== 'scale')
           transformPick = null;
+        if (tool !== 'mirror') mirrorPt1 = null;
       }
     },
+    setOrtho(on) { orthoEnabled = on; },
     getTool:      () => currentTool,
     clearMeasure: () => { measurePt1 = null; measureSegs.length = 0; anglePts = []; areaPts = []; },
     setBg:        (dark) => { app.renderer.background.color = dark ? BG_DARK : BG_LIGHT; },
@@ -536,6 +544,20 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
       const bsy = toSY(currentTool === 'move' || currentTool === 'copy' ? -baseWY : -pivotY);
       overlay.moveTo(bsx-6,bsy).lineTo(bsx+6,bsy).moveTo(bsx,bsy-6).lineTo(bsx,bsy+6)
              .stroke({ color: 0xffff00, width: 1.5 });
+    }
+
+    // ── Mirror tool preview ───────────────────────────────────────────────────
+    if (currentTool === 'mirror' && mirrorPt1) {
+      const mx1 = toSX(mirrorPt1.wx), my1 = toSY(-mirrorPt1.wy);
+      overlay.circle(mx1, my1, 4).fill({ color: 0xff6600 });
+      overlay.moveTo(mx1, my1).lineTo(mouseScreen.x, mouseScreen.y)
+             .stroke({ color: 0xff6600, width: 1.5, alpha: 0.85 });
+      const wx2 = (mouseScreen.x - scene.x) / scene.scale.x;
+      const wy2 = -((mouseScreen.y - scene.y) / scene.scale.y);
+      for (const ent of selectedEntities) {
+        const ghost = mirrorEntityAcrossLine(ent, mirrorPt1.wx, mirrorPt1.wy, wx2, wy2);
+        drawEntityHighlight(overlay, ghost, 0xff6600, scx, scy, ox, oy);
+      }
     }
 
     // ── Zoom window rect ──────────────────────────────────────────────────────
@@ -786,10 +808,23 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
           transformPick = null;
           app.canvas.style.cursor = 'crosshair';
         }
+      } else if (currentTool === 'mirror') {
+        const wx = (sx - scene.x) / scene.scale.x;
+        const wy = -((sy - scene.y) / scene.scale.y);
+        if (!mirrorPt1) {
+          mirrorPt1 = { wx, wy };
+        } else {
+          const targets = [...selectedEntities];
+          if (targets.length > 0) {
+            state.onMirrorAction?.(targets, mirrorPt1.wx, mirrorPt1.wy, wx, wy);
+          }
+          mirrorPt1 = null;
+          app.canvas.style.cursor = 'crosshair';
+        }
       }
     }
 
-    if (e.button === 2) { measurePt1 = null; anglePts = []; areaPts = []; transformPick = null; }
+    if (e.button === 2) { measurePt1 = null; anglePts = []; areaPts = []; transformPick = null; mirrorPt1 = null; }
   });
 
   window.addEventListener('mousemove', (e: MouseEvent) => {
@@ -841,8 +876,14 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
 
     // Update transform cursor world position
     if (transformPick) {
-      transformCurWX = sceneX;
-      transformCurWY = -sceneY;
+      let wx = sceneX, wy = -sceneY;
+      if (orthoEnabled && (currentTool === 'move' || currentTool === 'copy')) {
+        const ddx = wx - transformPick.baseWX, ddy = wy - transformPick.baseWY;
+        if (Math.abs(ddx) >= Math.abs(ddy)) wy = transformPick.baseWY;
+        else wx = transformPick.baseWX;
+      }
+      transformCurWX = wx;
+      transformCurWY = wy;
     }
 
     state.onCoordUpdate(sceneX, -sceneY);
@@ -937,7 +978,7 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
       measurePt1 = null; zoomStart = null; zoomRect = null;
       anglePts = []; areaPts = [];
       selBoxStart = null; selBoxRect = null;
-      transformPick = null;
+      transformPick = null; mirrorPt1 = null;
       app.canvas.style.cursor = currentTool === 'pan' ? 'default' : 'crosshair';
     }
   });

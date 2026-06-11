@@ -32,6 +32,7 @@
     "copy": "Copy  CP",
     "rotate": "Rotate  RO",
     "scale": "Scale  SC",
+    "mirror": "Mirror  MI",
     "fit": "Fit View  Home",
     "zoom_in": "Zoom In",
     "zoom_out": "Zoom Out"
@@ -62,7 +63,9 @@
     "tool_copy": "Copy",
     "tool_rotate": "Rotate",
     "tool_scale": "Scale",
+    "tool_mirror": "Mirror",
     "toggle_osnap": "Toggle OSNAP",
+    "toggle_ortho": "Toggle ORTHO",
     "layers_all": "Show All Layers",
     "layers_none": "Hide All Layers",
     "undo": "Undo",

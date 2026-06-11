@@ -1,6 +1,12 @@
 {
-  "app": { "version": "v0.1-beta" },
-  "titlebar": { "settings": "设置", "minimize": "最小化", "close": "关闭" },
+  "app": {
+    "version": "v0.1-beta"
+  },
+  "titlebar": {
+    "settings": "设置",
+    "minimize": "最小化",
+    "close": "关闭"
+  },
   "dropzone": {
     "title": "将CAD文件拖放到此处",
     "formats": "DWG · DXF",
@@ -8,7 +14,10 @@
     "browse": "选择文件  Ctrl+O",
     "recent": "最近文件"
   },
-  "footer": { "local": "本地处理", "opensource": "开源" },
+  "footer": {
+    "local": "本地处理",
+    "opensource": "开源"
+  },
   "infobar": {
     "dwg_partial": "检测到 DWG {{version}} — 使用开源引擎，部分高级元素可能缺失。",
     "report": "报告问题",
@@ -34,7 +43,8 @@
     "scale": "缩放  SC",
     "fit": "适合视图  Home",
     "zoom_in": "放大",
-    "zoom_out": "缩小"
+    "zoom_out": "缩小",
+    "mirror": "镜像  MI"
   },
   "menu": {
     "file": "文件",
@@ -72,7 +82,9 @@
     "user_manual": "用户手册",
     "report": "报告问题",
     "about": "关于 Cadze",
-    "settings": "设置…"
+    "settings": "设置…",
+    "tool_mirror": "镜像",
+    "toggle_ortho": "切换正交"
   },
   "ctx": {
     "fit_view": "适合视图",
@@ -88,19 +100,57 @@
   "layers": "图层",
   "properties": "属性",
   "no_selection": "未选择对象",
-  "props": { "type": "类型", "layer": "图层", "length": "长度", "radius": "半径", "color": "颜色", "angle": "角度", "area": "面积", "perimeter": "周长", "selected": "已选择", "delete_hint": "Del — 删除所选" },
-  "statusbar": { "coords": "X: {{x}}  Y: {{y}}", "zoom": "1:{{z}}" },
-  "cmd": { "hint": "输入命令...", "zoom_all": "ZOOM: 全部显示", "unknown": "未知命令: {{cmd}}" },
-  "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
+  "props": {
+    "type": "类型",
+    "layer": "图层",
+    "length": "长度",
+    "radius": "半径",
+    "color": "颜色",
+    "angle": "角度",
+    "area": "面积",
+    "perimeter": "周长",
+    "selected": "已选择",
+    "delete_hint": "Del — 删除所选"
+  },
+  "statusbar": {
+    "coords": "X: {{x}}  Y: {{y}}",
+    "zoom": "1:{{z}}"
+  },
+  "cmd": {
+    "hint": "输入命令...",
+    "zoom_all": "ZOOM: 全部显示",
+    "unknown": "未知命令: {{cmd}}"
+  },
+  "export": {
+    "pdf": "PDF",
+    "png": "PNG",
+    "dxf": "DXF"
+  },
   "pro": "Cadze Pro — 即将推出",
-  "settings": { "title": "设置", "language": "语言", "keyboard": "键盘快捷键", "open_zoom": "默认打开缩放" },
-  "langs": { "en": "English", "tr": "Türkçe", "de": "Deutsch", "zh": "中文", "ja": "日本語" },
-  "loading": { "parsing": "正在解析文件...", "rendering": "正在渲染 {{n}} 个对象..." },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "keyboard": "键盘快捷键",
+    "open_zoom": "默认打开缩放"
+  },
+  "langs": {
+    "en": "English",
+    "tr": "Türkçe",
+    "de": "Deutsch",
+    "zh": "中文",
+    "ja": "日本語"
+  },
+  "loading": {
+    "parsing": "正在解析文件...",
+    "rendering": "正在渲染 {{n}} 个对象..."
+  },
   "time": {
     "just_now": "刚才",
     "minutes_ago": "{{m}} 分钟前",
     "hours_ago": "{{h}} 小时前",
     "days_ago": "{{d}} 天前"
   },
-  "note": { "placeholder": "输入注释… (Enter 保存，Esc 取消)" }
+  "note": {
+    "placeholder": "输入注释… (Enter 保存，Esc 取消)"
+  }
 }
