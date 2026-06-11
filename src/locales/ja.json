@@ -93,7 +93,7 @@
   "cmd": { "hint": "コマンドを入力...", "zoom_all": "ZOOM: 全体", "unknown": "不明なコマンド: {{cmd}}" },
   "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
   "pro": "Cadze Pro — 近日公開",
-  "settings": { "title": "設定", "language": "言語", "keyboard": "キーボードショートカット" },
+  "settings": { "title": "設定", "language": "言語", "keyboard": "キーボードショートカット", "open_zoom": "デフォルト表示倍率" },
   "langs": { "en": "English", "tr": "Türkçe", "de": "Deutsch", "zh": "中文", "ja": "日本語" },
   "loading": { "parsing": "ファイルを解析中...", "rendering": "{{n}} 個のオブジェクトをレンダリング中..." },
   "time": {

@@ -100,7 +100,8 @@
   "settings": {
     "title": "Settings",
     "language": "Language",
-    "keyboard": "Keyboard Shortcuts"
+    "keyboard": "Keyboard Shortcuts",
+    "open_zoom": "Default Opening Zoom"
   },
   "langs": {
     "en": "English",

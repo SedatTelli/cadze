@@ -93,7 +93,7 @@
   "cmd": { "hint": "Befehl eingeben...", "zoom_all": "ZOOM: Alles", "unknown": "Unbekannter Befehl: {{cmd}}" },
   "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
   "pro": "Cadze Pro — Demnächst",
-  "settings": { "title": "Einstellungen", "language": "Sprache", "keyboard": "Tastaturkürzel" },
+  "settings": { "title": "Einstellungen", "language": "Sprache", "keyboard": "Tastaturkürzel", "open_zoom": "Standard-Öffnungszoom" },
   "langs": { "en": "English", "tr": "Türkçe", "de": "Deutsch", "zh": "中文", "ja": "日本語" },
   "loading": { "parsing": "Datei wird geparst...", "rendering": "{{n}} Objekte werden gerendert..." },
   "time": {

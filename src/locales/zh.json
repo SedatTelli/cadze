@@ -93,7 +93,7 @@
   "cmd": { "hint": "输入命令...", "zoom_all": "ZOOM: 全部显示", "unknown": "未知命令: {{cmd}}" },
   "export": { "pdf": "PDF", "png": "PNG", "dxf": "DXF" },
   "pro": "Cadze Pro — 即将推出",
-  "settings": { "title": "设置", "language": "语言", "keyboard": "键盘快捷键" },
+  "settings": { "title": "设置", "language": "语言", "keyboard": "键盘快捷键", "open_zoom": "默认打开缩放" },
   "langs": { "en": "English", "tr": "Türkçe", "de": "Deutsch", "zh": "中文", "ja": "日本語" },
   "loading": { "parsing": "正在解析文件...", "rendering": "正在渲染 {{n}} 个对象..." },
   "time": {

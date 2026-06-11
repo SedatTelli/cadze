@@ -100,7 +100,8 @@
   "settings": {
     "title": "Ayarlar",
     "language": "Dil",
-    "keyboard": "Klavye Kısayolları"
+    "keyboard": "Klavye Kısayolları",
+    "open_zoom": "Varsayılan Açılış Yakınlaşması"
   },
   "langs": {
     "en": "English",

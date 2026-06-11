@@ -1,6 +1,6 @@
 import { initI18n, t, setLang, currentLang, SUPPORTED, LANG_META, type LangCode } from './i18n';
 import { setupDropzone, refreshDropzoneLabels } from './dropzone';
-import { setupToolbar, setupCommandLine, setupExport, setupMenubar, setupContextMenu, setupKeyboardShortcuts, refreshWorkspaceLabels } from './workspace';
+import { setupToolbar, setupCommandLine, setupExport, setupMenubar, setupContextMenu, setupKeyboardShortcuts, refreshWorkspaceLabels, setDefaultOpenZoom, getDefaultOpenZoom } from './workspace';
 
 async function main(): Promise<void> {
   await initI18n();
@@ -66,6 +66,8 @@ function applyLabels(): void {
   document.getElementById('lang-label')!.textContent = t('settings.language');
   const kbLabel = document.getElementById('settings-keyboard-label');
   if (kbLabel) kbLabel.textContent = t('settings.keyboard');
+  const zoomLabel = document.getElementById('zoom-label');
+  if (zoomLabel) zoomLabel.textContent = t('settings.open_zoom');
 
   // Toolbar data-tip tooltips
   document.getElementById('tool-zoom')?.setAttribute('data-tip', t('toolbar.zoom'));
@@ -201,10 +203,22 @@ function setupSettings(): void {
       modal.classList.remove('visible');
     }
   });
-  // Allow workspace.ts to open settings via executeCmd('settings')
   document.addEventListener('cadze:open-settings', () => {
     modal.classList.add('visible');
   });
+
+  // Zoom slider
+  const zoomSlider  = document.getElementById('zoom-slider') as HTMLInputElement | null;
+  const zoomDisplay = document.getElementById('zoom-value-display') as HTMLElement | null;
+  if (zoomSlider && zoomDisplay) {
+    zoomSlider.value = String(getDefaultOpenZoom());
+    zoomDisplay.textContent = zoomSlider.value + '%';
+    zoomSlider.addEventListener('input', () => {
+      const val = parseInt(zoomSlider.value, 10);
+      zoomDisplay.textContent = val + '%';
+      setDefaultOpenZoom(val);
+    });
+  }
 }
 
 function setupHelp(): void {

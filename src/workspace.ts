@@ -22,6 +22,13 @@ let frozenLayers   = new Set<string>();
 let isDarkBg = true;
 let offsetDistance = 1;
 
+let defaultOpenZoom: number = parseInt(localStorage.getItem('cadze_open_zoom') ?? '100', 10);
+export function setDefaultOpenZoom(value: number): void {
+  defaultOpenZoom = value;
+  localStorage.setItem('cadze_open_zoom', String(value));
+}
+export function getDefaultOpenZoom(): number { return defaultOpenZoom; }
+
 // Unit system
 type UnitCode = 'unit' | 'mm' | 'cm' | 'm' | 'inch' | 'ft';
 let currentUnit: UnitCode = 'unit';
@@ -222,6 +229,9 @@ export async function showWorkspace(loaded: LoadedFile, filePath?: string): Prom
       t('loading.rendering', { n: tabDxf.entities?.length ?? 0 });
     await new Promise(r => setTimeout(r, 10));
     renderDxf(rendererState, tabDxf, tabLayerVis);
+    if (defaultOpenZoom !== 100) {
+      rendererState.zoomBy(Math.max(0.01, defaultOpenZoom / 100));
+    }
   }
 
   loading.classList.remove('visible');
