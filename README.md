@@ -8,6 +8,12 @@ Built with [Tauri v2](https://tauri.app) (Rust) and [Pixi.js v8](https://pixijs.
 
 ---
 
+## Video
+
+[![Cadze — Ücretsiz AutoCAD Alternatifi](https://img.youtube.com/vi/gMYc-pxq6xI/maxresdefault.jpg)](https://www.youtube.com/watch?v=gMYc-pxq6xI)
+
+---
+
 ## Features
 
 ### Viewing
@@ -209,4 +215,4 @@ Cadze does **not** include or distribute any SHX font files owned by Autodesk (s
 
 Cadze is released under the [MIT License](LICENSE).
 
-Copyright (c) 2024 Cadze Contributors
+Copyright (c) 2025 Sedat Telli
