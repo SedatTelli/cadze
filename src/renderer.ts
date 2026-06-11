@@ -1075,7 +1075,7 @@ export function renderDxf(state: RendererState, dxf: any, visibleLayers: Set<str
   if (entities.length <= MAX_ENTITIES_FULL) {
     for (const e of entities) {
       if (!isLayerVisible(e.layer, visibleLayers)) continue;
-      if (e.type === 'TEXT' || e.type === 'MTEXT') drawText(scene, e);
+      if (e.type === 'TEXT' || e.type === 'MTEXT') drawText(scene, e, resolveColor(e, dxf));
     }
   }
 }
@@ -1463,17 +1463,71 @@ function drawEllipse(g: Graphics, cx: number, cy: number, rx: number, ry: number
   g.stroke({ color, width: w });
 }
 
-function drawText(container: Container, entity: any): void {
-  const pos = entity.position ?? entity.insertionPoint;
+function cleanMText(raw: string): string {
+  let s = raw;
+  s = s.replace(/\\P/gi, '\n');
+  s = s.replace(/\\n/gi, '\n');
+  s = s.replace(/\\~/g, ' ');
+  s = s.replace(/\\\\/g, '\x00BSLASH\x00');
+  s = s.replace(/\\\{/g, '{');
+  s = s.replace(/\\\}/g, '}');
+  s = s.replace(/\\t/gi, '  ');
+  // Strip formatting groups: {\H...;}, {\W...;}, {\f...;}, {\C...;} etc.
+  s = s.replace(/\{\\[^}]*\}/g, '');
+  // Strip standalone \X...; codes (height, color, etc.)
+  s = s.replace(/\\[A-Za-z][^;\\]*;/g, '');
+  // Strip inline format toggles \l \L \o \O \k \K
+  s = s.replace(/\\[lLoOkK]/g, '');
+  // Strip remaining braces
+  s = s.replace(/[{}]/g, '');
+  s = s.replace(/\x00BSLASH\x00/g, '\\');
+  return s.trim();
+}
+
+function drawText(container: Container, entity: any, color: number): void {
+  // Correct position field per entity type
+  const pos = entity.type === 'TEXT'
+    ? (entity.startPoint ?? entity.position ?? entity.insertionPoint)
+    : (entity.position ?? entity.insertionPoint);
   if (!pos) return;
+
   const raw: string = entity.text ?? entity.string ?? '';
-  const text = raw.replace(/[^\x20-\x7EÀ-ɏĀ-ž]/g, '?');
+  const cleaned = entity.type === 'MTEXT' ? cleanMText(raw) : raw;
+  // Strip control characters but allow full Unicode
+  const text = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  if (!text.trim()) return;
+
+  const fontSize = Math.max(((entity.textHeight ?? entity.height ?? 2.5)) * 8, 10);
+
   const style = new TextStyle({
-    fontSize: Math.max((entity.textHeight || 2.5) * 8, 10),
-    fill: 0xe8e8f0, fontFamily: 'Segoe UI, Arial, sans-serif',
+    fontSize,
+    fill: color || 0xe8e8f0,
+    fontFamily: 'Arial, Helvetica, sans-serif',
+    wordWrap: entity.type === 'MTEXT',
+    wordWrapWidth: entity.width ? entity.width * 8 : 2000,
   });
+
   const t = new Text({ text, style });
-  t.x=pos.x; t.y=-pos.y; t.scale.set(1/8);
+  t.x = pos.x;
+  t.y = -pos.y;
+  t.scale.set(1 / 8);
+
+  // Rotation (degrees → radians, negated for screen)
+  const rot = entity.rotation ?? 0;
+  if (rot) t.rotation = -rot * Math.PI / 180;
+
+  // Anchor / alignment
+  if (entity.type === 'MTEXT') {
+    const ap = entity.attachmentPoint ?? 1;
+    t.anchor.x = ((ap - 1) % 3) * 0.5;
+    t.anchor.y = Math.floor((ap - 1) / 3) * 0.5;
+  } else {
+    const h = entity.halign ?? 0;
+    const v = entity.valign ?? 0;
+    t.anchor.x = h === 4 ? 0.5 : h === 1 ? 0.5 : h === 2 ? 1 : 0;
+    t.anchor.y = v === 3 ? 0 : v === 2 ? 0.5 : v === 1 ? 1 : 0.8;
+  }
+
   container.addChild(t);
 }
 
