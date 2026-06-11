@@ -1216,13 +1216,89 @@ function drawEntity(g: Graphics, entity: any, color: number, dxf: any, ins: any,
       const blockName = entity.block ?? entity.dimensionBlock;
       if (blockName) {
         const block = dxf?.blocks?.[blockName];
-        if (block?.entities?.length)
+        if (block?.entities?.length) {
           for (const be of block.entities)
             drawEntity(g, be, color, dxf, null, depth+1, w);
+          break;
+        }
       }
+      // Fallback: render from geometry when pre-rendered block is missing
+      drawDimensionFallback(g, entity, color, w);
       break;
     }
   }
+}
+
+function drawDimensionFallback(g: Graphics, e: any, color: number, w: number): void {
+  const P1 = e.linearOrAngularPoint1;
+  const P2 = e.linearOrAngularPoint2;
+  const anchor = e.anchorPoint;
+  const textPt = e.middleOfText;
+  const dimType = (e.dimensionType ?? 0) & 7;
+
+  if (dimType === 4 || dimType === 3) {
+    // Radius or diameter: line from anchor (center) to diameterOrRadiusPoint
+    const ctr = e.anchorPoint ?? e.insertionPoint;
+    const rpt = e.diameterOrRadiusPoint ?? e.linearOrAngularPoint1;
+    if (ctr && rpt) {
+      g.moveTo(ctr.x, -ctr.y).lineTo(rpt.x, -rpt.y).stroke({ color, width: w });
+    }
+    return;
+  }
+
+  if (!P1 || !P2) return;
+
+  // Aligned/linear: draw extension lines from P1, P2 to the dimension line
+  const measurement = e.actualMeasurement;
+  const dimLineY = anchor?.y ?? textPt?.y ?? (P1.y + P2.y) / 2;
+  const dimLineX = anchor?.x ?? textPt?.x ?? (P1.x + P2.x) / 2;
+  const theta = (e.angle ?? 0) * Math.PI / 180;
+  const cos = Math.cos(theta), sin = Math.sin(theta);
+
+  if (dimType === 1 || dimType === 0) {
+    // For aligned/linear: project P1, P2 onto dimension direction
+    const perpCos = -sin, perpSin = cos;
+    const perpOffset = perpCos * (dimLineX - P1.x) + perpSin * (dimLineY - P1.y);
+
+    const foot1x = P1.x + perpCos * perpOffset;
+    const foot1y = P1.y + perpSin * perpOffset;
+    const foot2x = P2.x + perpCos * perpOffset;
+    const foot2y = P2.y + perpSin * perpOffset;
+
+    // Extension lines
+    const extGap = Math.hypot(foot1x - P1.x, foot1y - P1.y) > 0.1 ? 0.05 : 0;
+    g.moveTo(P1.x, -P1.y).lineTo(foot1x + perpCos*extGap, -(foot1y + perpSin*extGap)).stroke({ color, width: w, alpha: 0.7 });
+    g.moveTo(P2.x, -P2.y).lineTo(foot2x + perpCos*extGap, -(foot2y + perpSin*extGap)).stroke({ color, width: w, alpha: 0.7 });
+    // Dimension line
+    g.moveTo(foot1x, -foot1y).lineTo(foot2x, -foot2y).stroke({ color, width: w });
+    // Arrows (small ticks)
+    const dimLen = Math.hypot(foot2x - foot1x, foot2y - foot1y);
+    if (dimLen > 1e-4) {
+      const dx = (foot2x - foot1x) / dimLen, dy = (foot2y - foot1y) / dimLen;
+      const aw = Math.min(dimLen * 0.08, 2.5);
+      g.moveTo(foot1x, -foot1y).lineTo(foot1x + dx*aw + perpCos*aw*0.3, -(foot1y + dy*aw + perpSin*aw*0.3)).stroke({ color, width: w });
+      g.moveTo(foot1x, -foot1y).lineTo(foot1x + dx*aw - perpCos*aw*0.3, -(foot1y + dy*aw - perpSin*aw*0.3)).stroke({ color, width: w });
+      g.moveTo(foot2x, -foot2y).lineTo(foot2x - dx*aw + perpCos*aw*0.3, -(foot2y - dy*aw + perpSin*aw*0.3)).stroke({ color, width: w });
+      g.moveTo(foot2x, -foot2y).lineTo(foot2x - dx*aw - perpCos*aw*0.3, -(foot2y - dy*aw - perpSin*aw*0.3)).stroke({ color, width: w });
+    }
+    // Text label
+    const tx = textPt?.x ?? (foot1x + foot2x) / 2;
+    const ty = textPt?.y ?? (foot1y + foot2y) / 2;
+    const label = e.text?.trim() || (measurement != null ? String(Math.round(measurement * 100) / 100) : '');
+    if (label) {
+      const textH = Math.min(dimLen * 0.12, 3.5);
+      drawSimpleText(g, label, tx, ty, textH, color, 0.9);
+    }
+  }
+}
+
+function drawSimpleText(g: Graphics, text: string, wx: number, wy: number,
+    height: number, color: number, alpha: number): void {
+  // Minimal text stub rendered as a thin underline; real text handled by PIXI text layer
+  const len = text.length * height * 0.55;
+  g.moveTo(wx - len/2, -(wy - height*0.1))
+   .lineTo(wx + len/2, -(wy - height*0.1))
+   .stroke({ color, width: 0.3, alpha: alpha * 0.4 });
 }
 
 function composeInsert(parent: any, child: any): any {
@@ -1240,13 +1316,106 @@ function resolveBlockColor(entity: any, parentColor: number, dxf: any): number {
 function drawHatch(g: Graphics, entity: any, color: number): void {
   if (!entity.boundaryPaths?.length) return;
   const isSolid = (entity.patternName ?? '').toUpperCase() === 'SOLID' || entity.isSolid;
+
   for (const path of entity.boundaryPaths) {
     const pts = extractBoundaryPoints(path);
     if (pts.length < 3) continue;
-    g.moveTo(pts[0].x,-pts[0].y);
-    for (let i=1;i<pts.length;i++) g.lineTo(pts[i].x,-pts[i].y);
+    g.moveTo(pts[0].x, -pts[0].y);
+    for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, -pts[i].y);
     g.closePath();
-    isSolid ? g.fill({ color, alpha: 0.75 }) : g.stroke({ color, width: 0.3, alpha: 0.5 });
+    if (isSolid) g.fill({ color, alpha: 0.75 });
+    else g.stroke({ color, width: 0.3, alpha: 0.25 });
+  }
+
+  if (isSolid || !entity.patternLines?.length) return;
+
+  const polygons: { x: number; y: number }[][] = entity.boundaryPaths
+    .map((p: any) => extractBoundaryPoints(p))
+    .filter((pts: { x: number; y: number }[]) => pts.length >= 3);
+  if (!polygons.length) return;
+
+  const scale = Math.max(entity.patternScale ?? 1, 1e-6);
+
+  for (const pline of entity.patternLines) {
+    const theta = ((pline.angle ?? 0) + (entity.patternAngle ?? 0)) * Math.PI / 180;
+    const cos = Math.cos(theta), sin = Math.sin(theta);
+    const bx = (pline.baseX ?? 0) * scale;
+    const by = (pline.baseY ?? 0) * scale;
+    const ox = (pline.offsetX ?? 0) * scale;
+    const oy = (pline.offsetY ?? 0) * scale;
+    const rawDashes: number[] = pline.dashes ?? [];
+
+    // Perpendicular distance between adjacent lines (component of offset perp to line dir)
+    const perp = -ox * sin + oy * cos;
+    if (Math.abs(perp) < 1e-10) continue;
+
+    // Bounding box of all polygons
+    let mnX = Infinity, mxX = -Infinity, mnY = Infinity, mxY = -Infinity;
+    for (const poly of polygons)
+      for (const pt of poly) {
+        if (pt.x < mnX) mnX = pt.x; if (pt.x > mxX) mxX = pt.x;
+        if (pt.y < mnY) mnY = pt.y; if (pt.y > mxY) mxY = pt.y;
+      }
+
+    // Project bounding box onto perp direction to find n range
+    const perpProj = (px: number, py: number) => (px - bx) * (-sin) + (py - by) * cos;
+    const projs = [perpProj(mnX,mnY), perpProj(mxX,mnY), perpProj(mnX,mxY), perpProj(mxX,mxY)];
+    const pMin = Math.min(...projs), pMax = Math.max(...projs);
+    const n1 = pMin / perp, n2 = pMax / perp;
+    const nStart = Math.floor(Math.min(n1, n2)) - 1;
+    const nEnd   = Math.ceil(Math.max(n1, n2)) + 1;
+    if (nEnd - nStart > 2000) continue; // safety: skip dense patterns
+
+    for (let n = nStart; n <= nEnd; n++) {
+      const lx = bx + n * ox, ly = by + n * oy;
+      for (const poly of polygons) {
+        const ts = hatchClipLine(lx, ly, cos, sin, poly);
+        for (let i = 0; i + 1 < ts.length; i += 2) {
+          const t0 = ts[i], t1 = ts[i + 1];
+          if (rawDashes.length === 0) {
+            g.moveTo(lx + t0*cos, -(ly + t0*sin))
+             .lineTo(lx + t1*cos, -(ly + t1*sin))
+             .stroke({ color, width: 0.5, alpha: 0.8 });
+          } else {
+            hatchDrawDashed(g, lx, ly, cos, sin, t0, t1, rawDashes, scale, color);
+          }
+        }
+      }
+    }
+  }
+}
+
+function hatchClipLine(lx: number, ly: number, cos: number, sin: number,
+    poly: { x: number; y: number }[]): number[] {
+  const ts: number[] = [];
+  const n = poly.length;
+  for (let i = 0; i < n; i++) {
+    const p1 = poly[i], p2 = poly[(i + 1) % n];
+    const dx = p2.x - p1.x, dy = p2.y - p1.y;
+    const denom = cos * dy - sin * dx;
+    if (Math.abs(denom) < 1e-10) continue;
+    const t = ((p1.x - lx) * dy - (p1.y - ly) * dx) / denom;
+    const u = ((p1.x - lx) * sin - (p1.y - ly) * cos) / denom;
+    if (u >= -1e-8 && u <= 1 + 1e-8) ts.push(t);
+  }
+  return ts.sort((a, b) => a - b);
+}
+
+function hatchDrawDashed(g: Graphics, lx: number, ly: number, cos: number, sin: number,
+    t0: number, t1: number, dashes: number[], scale: number, color: number): void {
+  let t = t0;
+  let di = 0;
+  const maxIter = dashes.length * 200 + 1;
+  while (t < t1 - 1e-10 && di < maxIter) {
+    const raw = dashes[di % dashes.length];
+    const seg = Math.abs(raw) * scale;
+    const isLine = raw >= 0;
+    const end = Math.min(t + Math.max(seg, 1e-10), t1);
+    if (isLine && end > t + 1e-10)
+      g.moveTo(lx + t*cos, -(ly + t*sin))
+       .lineTo(lx + end*cos, -(ly + end*sin))
+       .stroke({ color, width: 0.5, alpha: 0.8 });
+    t = end; di++;
   }
 }
 
