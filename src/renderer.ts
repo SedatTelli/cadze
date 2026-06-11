@@ -667,7 +667,7 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
         const sceneX = (sx - scene.x) / scene.scale.x;
         const sceneY = (sy - scene.y) / scene.scale.y;
         const tol = 8 / scene.scale.x;
-        mouseDownOnEntity = hitTestEntities(sceneX, -sceneY, spatialEntities, tol, quadTree);
+        mouseDownOnEntity = hitTestEntities(sceneX, -sceneY, spatialEntities, tol, quadTree, (state as any)._lockedLayers);
         if (mouseDownOnEntity !== null) {
           panStarted = true; isPanning = false;
         } else if (e.shiftKey) {
@@ -729,7 +729,7 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
         if (!transformPick) {
           // Phase 1: pick entity
           const tol = 8 / scene.scale.x;
-          const hit = hitTestEntities(wx, wy, spatialEntities, tol, quadTree);
+          const hit = hitTestEntities(wx, wy, spatialEntities, tol, quadTree, (state as any)._lockedLayers);
           const targets = hit
             ? (selectedEntities.has(hit) && selectedEntities.size > 1
                 ? [...selectedEntities] : [hit])
@@ -753,7 +753,7 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
         const wy = -((sy - scene.y) / scene.scale.y);
         if (!transformPick) {
           const tol = 8 / scene.scale.x;
-          const hit = hitTestEntities(wx, wy, spatialEntities, tol, quadTree);
+          const hit = hitTestEntities(wx, wy, spatialEntities, tol, quadTree, (state as any)._lockedLayers);
           const targets = hit
             ? (selectedEntities.has(hit) && selectedEntities.size > 1
                 ? [...selectedEntities] : [hit])
@@ -784,7 +784,7 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
         const wy = -((sy - scene.y) / scene.scale.y);
         if (!transformPick) {
           const tol = 8 / scene.scale.x;
-          const hit = hitTestEntities(wx, wy, spatialEntities, tol, quadTree);
+          const hit = hitTestEntities(wx, wy, spatialEntities, tol, quadTree, (state as any)._lockedLayers);
           const targets = hit
             ? (selectedEntities.has(hit) && selectedEntities.size > 1
                 ? [...selectedEntities] : [hit])
@@ -867,7 +867,7 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
     // Hover
     if (currentTool === 'pan' && !isPanning) {
       const tol = 5 / scene.scale.x;
-      const hit = hitTestEntities(sceneX, -sceneY, spatialEntities, tol, quadTree);
+      const hit = hitTestEntities(sceneX, -sceneY, spatialEntities, tol, quadTree, (state as any)._lockedLayers);
       if (hit !== hoveredEntity) {
         hoveredEntity = hit;
         app.canvas.style.cursor = hit ? 'pointer' : 'default';
@@ -946,7 +946,7 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
           minX: Math.min(s1.scx,s2.scx), maxX: Math.max(s1.scx,s2.scx),
           minY: Math.min(-s1.scy,-s2.scy), maxY: Math.max(-s1.scy,-s2.scy),
         };
-        const picked = selectInBox(spatialEntities, worldBox, crossing, visLayersRef);
+        const picked = selectInBox(spatialEntities, worldBox, crossing, visLayersRef, (state as any)._lockedLayers);
         if (!e.shiftKey) selectedEntities.clear();
         for (const en of picked) selectedEntities.add(en);
         selectedEntity = selectedEntities.size === 1 ? [...selectedEntities][0] : null;
@@ -968,7 +968,7 @@ export async function createRenderer(container: HTMLElement): Promise<RendererSt
       const wx = (sx - scene.x) / scene.scale.x;
       const wy = -((sy - scene.y) / scene.scale.y);
       const tol = 8 / scene.scale.x;
-      const hit = hitTestEntities(wx, wy, spatialEntities, tol, quadTree);
+      const hit = hitTestEntities(wx, wy, spatialEntities, tol, quadTree, (state as any)._lockedLayers);
       if (hit) state.onToolAction?.(currentTool, hit, wx, wy);
     }
   });
@@ -1021,7 +1021,8 @@ function resolveLineweight(entity: any, dxf: any): number {
   return 0.5;
 }
 
-export function renderDxf(state: RendererState, dxf: any, visibleLayers: Set<string>): void {
+export function renderDxf(state: RendererState, dxf: any, visibleLayers: Set<string>, lockedLayers?: Set<string>): void {
+  (state as any)._lockedLayers = lockedLayers ?? new Set();
   state.scene.removeChildren();
   if (!dxf?.entities?.length) return;
 
@@ -1575,10 +1576,12 @@ export function calcPolylineStats(entity: any): { area: number; perimeter: numbe
 
 // ── Selection box ─────────────────────────────────────────────────────────────
 
-function selectInBox(entities: any[], box: AABB, crossing: boolean, visibleLayers: Set<string>): any[] {
+function selectInBox(entities: any[], box: AABB, crossing: boolean,
+    visibleLayers: Set<string>, lockedLayers?: Set<string>): any[] {
   const result: any[] = [];
   for (const e of entities) {
     if (!isLayerVisible(e.layer, visibleLayers)) continue;
+    if (lockedLayers?.has(e.layer ?? '')) continue;
     const bbox = e._bbox as AABB | undefined;
     if (!bbox) continue;
     if (crossing ? aabbIntersects(bbox, box) : aabbContains(box, bbox))
@@ -1726,14 +1729,15 @@ function entityToSegs(e: any): Array<{ p1: { x: number; y: number }; p2: { x: nu
 
 // ── Hit Test ──────────────────────────────────────────────────────────────────
 
-export function hitTestEntities(wx: number, wy: number, entities: any[], tol: number, qt?: QuadTree | null): any | null {
+export function hitTestEntities(wx: number, wy: number, entities: any[], tol: number,
+    qt?: QuadTree | null, lockedLayers?: Set<string>): any | null {
   const candidates = qt
     ? qt.queryPoint(wx, wy, tol * 4)
     : entities;
-  // Reverse order so top-drawn entity wins
   const arr = Array.isArray(candidates) ? candidates : [...candidates];
-  for (let i=arr.length-1;i>=0;i--) {
-    if (hitTestEntity(wx,wy,arr[i],tol)) return arr[i];
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (lockedLayers?.has(arr[i].layer ?? '')) continue;
+    if (hitTestEntity(wx, wy, arr[i], tol)) return arr[i];
   }
   return null;
 }

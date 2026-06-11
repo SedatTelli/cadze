@@ -20,6 +20,7 @@ let rendererState: RendererState | null = null;
 let currentDxf: any = null;
 let layerVisibility = new Set<string>();
 let frozenLayers   = new Set<string>();
+let lockedLayers   = new Set<string>();
 let isDarkBg = true;
 let offsetDistance = 1;
 
@@ -70,6 +71,7 @@ interface TabState {
   dxf: any;
   layerVisibility: Set<string>;
   frozenLayers: Set<string>;
+  lockedLayers: Set<string>;
   viewport: { x: number; y: number; scale: number } | null;
 }
 
@@ -120,6 +122,7 @@ function activateTab(id: string): void {
   currentDxf = tab.dxf;
   layerVisibility = tab.layerVisibility;
   frozenLayers = tab.frozenLayers;
+  lockedLayers = tab.lockedLayers;
   rendererState?.clearSelection();
   clearNotes();
   hideMeasureBar();
@@ -127,7 +130,7 @@ function activateTab(id: string): void {
   redoStack.length = 0;
   if (currentDxf && rendererState) {
     buildLayerPanel(getLayers(currentDxf));
-    renderDxf(rendererState, currentDxf, layerVisibility);
+    renderDxf(rendererState, currentDxf, layerVisibility, lockedLayers);
     if (tab.viewport) {
       rendererState.scene.x = tab.viewport.x;
       rendererState.scene.y = tab.viewport.y;
@@ -148,6 +151,7 @@ function closeTab(id: string): void {
       currentDxf = null;
       layerVisibility = new Set();
       frozenLayers = new Set();
+      lockedLayers = new Set();
       rendererState?.clearSelection();
       rendererState?.clearMeasure();
       clearNotes();
@@ -164,6 +168,7 @@ function closeTab(id: string): void {
       currentDxf = next.dxf;
       layerVisibility = next.layerVisibility;
       frozenLayers = next.frozenLayers;
+      lockedLayers = next.lockedLayers;
       rendererState?.clearSelection();
       clearNotes();
       hideMeasureBar();
@@ -171,7 +176,7 @@ function closeTab(id: string): void {
       redoStack.length = 0;
       if (currentDxf && rendererState) {
         buildLayerPanel(getLayers(currentDxf));
-        renderDxf(rendererState, currentDxf, layerVisibility);
+        renderDxf(rendererState, currentDxf, layerVisibility, lockedLayers);
         if (next.viewport) {
           rendererState.scene.x = next.viewport.x;
           rendererState.scene.y = next.viewport.y;
@@ -219,7 +224,8 @@ export async function showWorkspace(loaded: LoadedFile, filePath?: string): Prom
     ? new Set(getLayers(tabDxf).map((l: any) => l.name))
     : new Set();
   const tabFrozen: Set<string> = new Set();
-  const tab: TabState = { id: tabId, loaded, filePath, dxf: tabDxf, layerVisibility: tabLayerVis, frozenLayers: tabFrozen, viewport: null };
+  const tabLocked: Set<string> = new Set();
+  const tab: TabState = { id: tabId, loaded, filePath, dxf: tabDxf, layerVisibility: tabLayerVis, frozenLayers: tabFrozen, lockedLayers: tabLocked, viewport: null };
   tabs.push(tab);
   activeTabId = tabId;
 
@@ -227,13 +233,14 @@ export async function showWorkspace(loaded: LoadedFile, filePath?: string): Prom
   currentDxf = tabDxf;
   layerVisibility = tabLayerVis;
   frozenLayers = tabFrozen;
+  lockedLayers = tabLocked;
 
   if (tabDxf) {
     buildLayerPanel(getLayers(tabDxf));
     document.getElementById('loading-text')!.textContent =
       t('loading.rendering', { n: tabDxf.entities?.length ?? 0 });
     await new Promise(r => setTimeout(r, 10));
-    renderDxf(rendererState, tabDxf, tabLayerVis);
+    renderDxf(rendererState, tabDxf, tabLayerVis, tabLocked);
     if (defaultOpenZoom !== 100) {
       rendererState.zoomBy(Math.max(0.01, defaultOpenZoom / 100));
     }
@@ -367,7 +374,7 @@ export function executeCmd(cmd: string): void {
       break;
     case 'fit-view':
       saveViewport();
-      if (rendererState && currentDxf) renderDxf(rendererState, currentDxf, layerVisibility);
+      if (rendererState && currentDxf) renderDxf(rendererState, currentDxf, layerVisibility, lockedLayers);
       break;
     case 'toggle-bg':
       toggleBackground();
@@ -1596,16 +1603,44 @@ function showAbout(): void {
 
 function buildLayerPanel(layers: { name: string; color: number; visible: boolean }[]): void {
   const list = document.getElementById('layer-list')!;
+  const searchInput = document.getElementById('layer-search') as HTMLInputElement | null;
+
+  // Rebuild with current filter
+  const filterText = searchInput?.value.toLowerCase() ?? '';
+  const visible = layers.filter(l => l.name.toLowerCase().includes(filterText));
+
   list.innerHTML = '';
 
-  for (const layer of layers) {
+  for (const layer of visible) {
     const item = document.createElement('div');
     item.className = 'layer-item';
+    if (!layerVisibility.has(layer.name)) item.classList.add('hidden');
+    if (frozenLayers.has(layer.name)) item.classList.add('frozen');
+    if (lockedLayers.has(layer.name)) item.classList.add('locked');
     item.dataset.layer = layer.name;
 
+    // Color dot with hidden color picker
     const dot = document.createElement('div');
     dot.className = 'layer-dot';
-    dot.style.background = `#${layer.color.toString(16).padStart(6, '0')}`;
+    const hexColor = '#' + layer.color.toString(16).padStart(6, '0');
+    dot.style.background = hexColor;
+    dot.title = 'Click to change color';
+
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = hexColor;
+    colorInput.style.cssText = 'position:absolute;opacity:0;width:1px;height:1px;pointer-events:none;';
+    colorInput.addEventListener('input', () => {
+      const hex = parseInt(colorInput.value.slice(1), 16);
+      dot.style.background = colorInput.value;
+      if (currentDxf?.tables?.layer?.layers?.[layer.name]) {
+        currentDxf.tables.layer.layers[layer.name].color = hex;
+        layer.color = hex;
+      }
+      rerender();
+    });
+    dot.appendChild(colorInput);
+    dot.addEventListener('click', (e) => { e.stopPropagation(); colorInput.click(); });
 
     const nameEl = document.createElement('div');
     nameEl.className = 'layer-name';
@@ -1615,8 +1650,9 @@ function buildLayerPanel(layers: { name: string; color: number; visible: boolean
     // Visibility toggle
     const visBtn = document.createElement('button');
     visBtn.className = 'layer-toggle';
-    visBtn.textContent = '👁';
+    visBtn.innerHTML = '&#128065;';
     visBtn.title = 'Toggle visibility';
+    visBtn.style.opacity = layerVisibility.has(layer.name) ? '1' : '0.3';
     visBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (layerVisibility.has(layer.name)) {
@@ -1634,9 +1670,9 @@ function buildLayerPanel(layers: { name: string; color: number; visible: boolean
     // Freeze toggle
     const frzBtn = document.createElement('button');
     frzBtn.className = 'layer-toggle layer-freeze';
-    frzBtn.textContent = '❄';
+    frzBtn.innerHTML = '&#10052;';
     frzBtn.title = 'Freeze layer';
-    frzBtn.style.opacity = '0.3';
+    frzBtn.style.opacity = frozenLayers.has(layer.name) ? '1' : '0.3';
     frzBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (frozenLayers.has(layer.name)) {
@@ -1655,16 +1691,44 @@ function buildLayerPanel(layers: { name: string; color: number; visible: boolean
       rerender();
     });
 
+    // Lock toggle
+    const lockBtn = document.createElement('button');
+    lockBtn.className = 'layer-toggle layer-lock';
+    lockBtn.innerHTML = '&#128274;';
+    lockBtn.title = 'Lock layer (prevents selection)';
+    lockBtn.style.opacity = lockedLayers.has(layer.name) ? '1' : '0.3';
+    lockBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (lockedLayers.has(layer.name)) {
+        lockedLayers.delete(layer.name);
+        item.classList.remove('locked');
+        lockBtn.style.opacity = '0.3';
+      } else {
+        lockedLayers.add(layer.name);
+        item.classList.add('locked');
+        lockBtn.style.opacity = '1';
+      }
+    });
+
     item.appendChild(dot);
     item.appendChild(nameEl);
     item.appendChild(frzBtn);
+    item.appendChild(lockBtn);
     item.appendChild(visBtn);
     list.appendChild(item);
+  }
+
+  // Wire up search input (once)
+  if (searchInput && !searchInput.dataset.wired) {
+    searchInput.dataset.wired = '1';
+    searchInput.addEventListener('input', () => {
+      if (currentDxf) buildLayerPanel(getLayers(currentDxf));
+    });
   }
 }
 
 function rerender(): void {
-  if (rendererState && currentDxf) renderDxf(rendererState, currentDxf, layerVisibility);
+  if (rendererState && currentDxf) renderDxf(rendererState, currentDxf, layerVisibility, lockedLayers);
 }
 
 // ── Properties panel ───────────────────────────────────────────────────────────
